@@ -118,6 +118,17 @@
             100% { clip: rect(12px, 9999px, 52px, 0); }
         }
         
+        /* Debug Panel */
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #ff0033;
+            color: #ff0033;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
         /* Dynamic Price Flash */
         .price-flash {
             animation: price-flash-animation 0.5s ease-out;
@@ -344,13 +355,19 @@
                 <p id="form-subtitle" class="text-gray-400">Welcome back! Please enter your details.</p>
             </div>
 
+            <!-- DEBUG PANEL (Visible when there are errors) -->
+            <div id="debug-panel" class="hidden debug-panel rounded-lg p-3 mb-4">
+                <div class="font-bold mb-1 text-red-400">🔧 DEBUG INFO (Check Console for details):</div>
+                <div id="debug-content" class="space-y-1"></div>
+            </div>
+
             <!-- Login Form -->
             <form id="login-form" class="space-y-6" onsubmit="event.preventDefault(); dynamicLogin();">
                 
                 <!-- Email/Username Input -->
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Email or Username</label>
-                    <input type="text" id="login-username" required
+                    <label class="text-sm font-medium text-gray-300 block">Email</label>
+                    <input type="email" id="login-username" required
                            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all"
                            placeholder="Enter your email">
                 </div>
@@ -436,7 +453,7 @@
                     <label class="text-sm font-medium text-gray-300 block">Password <span class="text-red-400">*</span></label>
                     <input type="password" id="reg-password" required oninput="checkPasswordStrength(this.value)"
                            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
-                           placeholder="Create a password">
+                           placeholder="Min 6 characters">
                     <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden mt-2">
                         <div id="strength-bar" class="h-full w-0 transition-all duration-300 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
                     </div>
@@ -452,6 +469,15 @@
                 <!-- Error Message for Registration -->
                 <div id="register-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
                     Registration failed. Please try again.
+                </div>
+
+                <!-- Success Message (Email Confirmation) -->
+                <div id="register-success" class="hidden text-emerald-400 text-sm text-center bg-emerald-500/10 py-3 rounded-lg border border-emerald-500/20">
+                    <div class="font-bold mb-1">✓ Account Created!</div>
+                    <div>Check your email to confirm your account. If you don't see it, check your spam folder.</div>
+                    <button type="button" onclick="resendConfirmation()" class="mt-2 text-xs underline hover:text-emerald-300">
+                        Resend confirmation email
+                    </button>
                 </div>
 
                 <button type="submit" id="register-btn" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
@@ -711,7 +737,14 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
     
     // Create client with different name to avoid conflict with global 'supabase'
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let supabaseClient;
+    try {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log('✓ Supabase client initialized successfully');
+    } catch (e) {
+        console.error('✗ Failed to initialize Supabase:', e);
+        alert('Failed to connect to authentication service. Check console.');
+    }
 
     // Dynamic State Management
     const AppState = {
@@ -725,8 +758,30 @@
         currentFilter: 'all',
         chatMessages: [],
         priceMultiplier: 1.0,
-        lastUpdate: Date.now()
+        lastUpdate: Date.now(),
+        pendingEmail: null // Store email for resend functionality
     };
+
+    // DEBUG HELPER
+    function logDebug(type, message, data = null) {
+        const panel = document.getElementById('debug-panel');
+        const content = document.getElementById('debug-content');
+        
+        console.log(`[${type}]`, message, data || '');
+        
+        if (panel && content) {
+            panel.classList.remove('hidden');
+            const line = document.createElement('div');
+            line.className = type === 'ERROR' ? 'text-red-400' : 'text-yellow-400';
+            line.textContent = `[${type}] ${message}`;
+            content.appendChild(line);
+            
+            // Keep only last 5 messages
+            while (content.children.length > 5) {
+                content.removeChild(content.firstChild);
+            }
+        }
+    }
 
     // Simulated Real-time Database (keep this as is)
     const LiveDB = {
@@ -772,8 +827,7 @@
         if (errorDiv) {
             errorDiv.textContent = message;
             errorDiv.classList.remove('hidden');
-            // Auto-hide after 5 seconds
-            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+            setTimeout(() => errorDiv.classList.add('hidden'), 8000);
         } else {
             alert(message);
         }
@@ -784,28 +838,29 @@
         const email = document.getElementById('login-username').value;
         const password = document.getElementById('login-password').value;
         
-        // Basic validation
         if (!email || !password) {
             showError('Please enter both email and password', 'login-error');
             return;
         }
         
-        // Show loading state
         const btn = document.getElementById('login-btn');
         const originalText = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="animate-pulse">Authenticating...</span>';
         
         try {
+            logDebug('INFO', 'Attempting login...', { email });
+            
             const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: email,
                 password: password
             });
             
             if (error) {
+                logDebug('ERROR', 'Login failed:', error.message);
                 showError(error.message, 'login-error');
-            } else {
-                // Success! Hide login, show shop
+            } else if (data.session) {
+                logDebug('SUCCESS', 'Login successful');
                 AppState.user = data.user;
                 document.getElementById('auth-modal').style.display = 'none';
                 document.getElementById('main-app').classList.remove('opacity-20', 'pointer-events-none');
@@ -813,8 +868,8 @@
                 showToast(`Welcome back!`, 'success');
             }
         } catch (err) {
-            showError('Connection failed. Please try again.', 'login-error');
-            console.error(err);
+            logDebug('ERROR', 'Connection error:', err.message);
+            showError('Connection failed. Check console for details.', 'login-error');
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -830,8 +885,9 @@
         const btn = document.getElementById('register-btn');
         const originalText = btn.innerHTML;
         
-        // Clear previous errors
+        // Clear previous states
         document.getElementById('register-error').classList.add('hidden');
+        document.getElementById('register-success').classList.add('hidden');
         
         // Validation checks
         if (!username || !email || !password) {
@@ -849,7 +905,6 @@
             return;
         }
         
-        // Check Terms of Service
         if (!termsCheckbox.checked) {
             showError('Please accept the Terms of Service and Privacy Policy', 'register-error');
             return;
@@ -860,28 +915,64 @@
         btn.innerHTML = '<span class="animate-pulse">Creating account...</span>';
         
         try {
+            logDebug('INFO', 'Attempting registration...', { email, username });
+            
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
                         username: username
-                    }
+                    },
+                    emailRedirectTo: window.location.href // Redirect back to same page after confirmation
                 }
+            });
+            
+            if (error) {
+                logDebug('ERROR', 'Registration error:', error.message);
+                showError(error.message, 'register-error');
+            } else {
+                logDebug('SUCCESS', 'Registration successful', data);
+                AppState.pendingEmail = email;
+                
+                // Hide form elements, show success
+                document.getElementById('register-form').querySelectorAll('input, button[type="submit"]').forEach(el => {
+                    if (el.id !== 'register-success') el.style.display = 'none';
+                });
+                document.getElementById('register-success').classList.remove('hidden');
+                
+                showToast('Account created! Check your email.', 'success');
+            }
+        } catch (err) {
+            logDebug('ERROR', 'Unexpected error:', err.message);
+            showError('Something went wrong: ' + err.message, 'register-error');
+            console.error('Full error:', err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    // Resend confirmation email
+    async function resendConfirmation() {
+        if (!AppState.pendingEmail) {
+            showError('No pending registration found', 'register-error');
+            return;
+        }
+        
+        try {
+            const { error } = await supabaseClient.auth.resend({
+                type: 'signup',
+                email: AppState.pendingEmail
             });
             
             if (error) {
                 showError(error.message, 'register-error');
             } else {
-                showToast('Success! Check your email to confirm your account.', 'success');
-                toggleAuthMode(); // Switch back to login
+                showToast('Confirmation email resent!', 'success');
             }
         } catch (err) {
-            showError('Something went wrong. Please try again.', 'register-error');
-            console.error(err);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            showError('Failed to resend email', 'register-error');
         }
     }
 
@@ -892,9 +983,10 @@
         const title = document.getElementById('form-title');
         const subtitle = document.getElementById('form-subtitle');
         
-        // Clear any existing errors when switching
+        // Clear errors and debug panel
         document.getElementById('login-error').classList.add('hidden');
         document.getElementById('register-error').classList.add('hidden');
+        document.getElementById('debug-panel').classList.add('hidden');
         
         if(loginForm.classList.contains('hidden')) {
             // Switch to login
@@ -941,7 +1033,6 @@
         const width = (strength / 5) * 100;
         bar.style.width = width + '%';
         
-        // Color change
         if (strength < 2) bar.className = 'h-full transition-all duration-300 bg-red-500';
         else if (strength < 4) bar.className = 'h-full transition-all duration-300 bg-yellow-500';
         else bar.className = 'h-full transition-all duration-300 bg-green-500';
@@ -957,6 +1048,15 @@
         setInterval(() => LiveDB.simulateActivity(), 8000);
         renderProducts();
         setInterval(updateDynamicPrices, 5000);
+        
+        // Check Supabase connection
+        if (supabaseClient) {
+            console.log('Supabase URL:', SUPABASE_URL);
+            console.log('To fix registration issues:');
+            console.log('1. Check Supabase Dashboard > Authentication > Users to see if user was created');
+            console.log('2. Check Authentication > Email Templates if emails are sending');
+            console.log('3. If using localhost, make sure Site URL is set to http://localhost in Auth settings');
+        }
     });
 
     // Product Rendering
