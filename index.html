@@ -419,21 +419,21 @@
             <form id="register-form" class="hidden space-y-5" onsubmit="event.preventDefault(); dynamicRegister();">
                 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Username</label>
+                    <label class="text-sm font-medium text-gray-300 block">Username <span class="text-red-400">*</span></label>
                     <input type="text" id="reg-username" required
                            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all"
                            placeholder="Choose a username">
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Email</label>
+                    <label class="text-sm font-medium text-gray-300 block">Email <span class="text-red-400">*</span></label>
                     <input type="email" id="reg-email" required
                            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all"
                            placeholder="your@email.com">
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Password</label>
+                    <label class="text-sm font-medium text-gray-300 block">Password <span class="text-red-400">*</span></label>
                     <input type="password" id="reg-password" required oninput="checkPasswordStrength(this.value)"
                            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
                            placeholder="Create a password">
@@ -443,18 +443,23 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Confirm Password</label>
+                    <label class="text-sm font-medium text-gray-300 block">Confirm Password <span class="text-red-400">*</span></label>
                     <input type="password" id="reg-confirm" required
                            class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
                            placeholder="Confirm your password">
                 </div>
 
-                <button type="submit" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                <!-- Error Message for Registration -->
+                <div id="register-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+                    Registration failed. Please try again.
+                </div>
+
+                <button type="submit" id="register-btn" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
                     Create Account
                 </button>
 
                 <div class="flex items-start gap-2 text-xs text-gray-500 mt-4">
-                    <input type="checkbox" required class="mt-0.5 w-4 h-4 rounded border-gray-600 bg-white/5 text-pink-500">
+                    <input type="checkbox" id="terms-checkbox" required class="mt-0.5 w-4 h-4 rounded border-gray-600 bg-white/5 text-pink-500">
                     <span>I agree to the <a href="#" class="text-pink-400 hover:underline">Terms of Service</a> and <a href="#" class="text-pink-400 hover:underline">Privacy Policy</a></span>
                 </div>
 
@@ -761,6 +766,19 @@
         }
     };
 
+    // Helper function to show errors with target element support
+    function showError(message, elementId = 'login-error') {
+        const errorDiv = document.getElementById(elementId);
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            // Auto-hide after 5 seconds
+            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        } else {
+            alert(message);
+        }
+    }
+
     // Authentication Flow with Supabase
     async function dynamicLogin() {
         const email = document.getElementById('login-username').value;
@@ -768,9 +786,15 @@
         
         // Basic validation
         if (!email || !password) {
-            showError('Please enter both email and password');
+            showError('Please enter both email and password', 'login-error');
             return;
         }
+        
+        // Show loading state
+        const btn = document.getElementById('login-btn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-pulse">Authenticating...</span>';
         
         try {
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -779,7 +803,7 @@
             });
             
             if (error) {
-                showError(error.message);
+                showError(error.message, 'login-error');
             } else {
                 // Success! Hide login, show shop
                 AppState.user = data.user;
@@ -789,59 +813,75 @@
                 showToast(`Welcome back!`, 'success');
             }
         } catch (err) {
-            showError('Connection failed. Please try again.');
+            showError('Connection failed. Please try again.', 'login-error');
             console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     }
 
     async function dynamicRegister() {
-        const email = document.getElementById('reg-email').value;
+        const username = document.getElementById('reg-username').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
         const confirmPassword = document.getElementById('reg-confirm').value;
+        const termsCheckbox = document.getElementById('terms-checkbox');
+        const btn = document.getElementById('register-btn');
+        const originalText = btn.innerHTML;
         
-        // Validation
-        if (!email || !password) {
-            alert('Please fill in all fields');
+        // Clear previous errors
+        document.getElementById('register-error').classList.add('hidden');
+        
+        // Validation checks
+        if (!username || !email || !password) {
+            showError('Please fill in all required fields', 'register-error');
             return;
         }
         
         if (password !== confirmPassword) {
-            alert('Passwords do not match!');
+            showError('Passwords do not match!', 'register-error');
             return;
         }
         
         if (password.length < 6) {
-            alert('Password must be at least 6 characters');
+            showError('Password must be at least 6 characters', 'register-error');
             return;
         }
+        
+        // Check Terms of Service
+        if (!termsCheckbox.checked) {
+            showError('Please accept the Terms of Service and Privacy Policy', 'register-error');
+            return;
+        }
+        
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-pulse">Creating account...</span>';
         
         try {
             const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
-                password: password
+                password: password,
+                options: {
+                    data: {
+                        username: username
+                    }
+                }
             });
             
             if (error) {
-                alert('Error: ' + error.message);
+                showError(error.message, 'register-error');
             } else {
-                alert('Success! Check your email to confirm your account, then come back to log in.');
+                showToast('Success! Check your email to confirm your account.', 'success');
                 toggleAuthMode(); // Switch back to login
             }
         } catch (err) {
-            alert('Something went wrong. Please try again.');
+            showError('Something went wrong. Please try again.', 'register-error');
             console.error(err);
-        }
-    }
-
-    // Helper function to show errors
-    function showError(message) {
-        const errorDiv = document.getElementById('login-error');
-        if (errorDiv) {
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
-        } else {
-            alert(message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     }
 
@@ -851,6 +891,10 @@
         const registerForm = document.getElementById('register-form');
         const title = document.getElementById('form-title');
         const subtitle = document.getElementById('form-subtitle');
+        
+        // Clear any existing errors when switching
+        document.getElementById('login-error').classList.add('hidden');
+        document.getElementById('register-error').classList.add('hidden');
         
         if(loginForm.classList.contains('hidden')) {
             // Switch to login
@@ -1132,8 +1176,86 @@
             location.reload();
         });
     }
+
+    function toggleLiveChat() {
+        const chat = document.getElementById('live-chat');
+        if (chat) {
+            chat.classList.toggle('translate-y-[120%]');
+        }
+    }
+
+    function handleChatKeypress(event) {
+        if (event.key === 'Enter') {
+            sendChatMessage();
+        }
+    }
+
+    function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        if (message) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message bg-white/5 p-2 rounded text-xs';
+            div.innerHTML = `<span class="text-cyan-400 font-bold">You:</span> ${message}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            input.value = '';
+            
+            // Simulate response
+            setTimeout(() => {
+                const response = document.createElement('div');
+                response.className = 'chat-message bg-white/5 p-2 rounded text-xs';
+                response.innerHTML = `<span class="text-pink-400 font-bold">System:</span> Message received.`;
+                container.appendChild(response);
+                container.scrollTop = container.scrollHeight;
+            }, 1000);
+        }
+    }
+
+    function toggleLiveFeed() {
+        showToast('Live feed feature coming soon!', 'info');
+    }
+
+    function sortProducts(sortType) {
+        showToast(`Sorting by ${sortType}...`, 'info');
+        // Implement actual sorting logic here
+    }
+
+    function debouncedSearch(query) {
+        if (!query) {
+            document.getElementById('search-results').classList.add('hidden');
+            return;
+        }
+        // Simple search implementation
+        const results = LiveDB.products.filter(p => 
+            p.name.toLowerCase().includes(query.toLowerCase()) ||
+            p.category.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        const container = document.getElementById('search-results');
+        if (results.length > 0) {
+            container.innerHTML = results.map(p => `
+                <div class="p-3 hover:bg-white/10 cursor-pointer flex items-center gap-3" onclick="quickAddToCart(${p.id})">
+                    <img src="${p.image}" class="w-10 h-10 rounded object-cover">
+                    <div>
+                        <div class="text-sm font-bold">${p.name}</div>
+                        <div class="text-xs text-cyan-400">$${LiveDB.getDynamicPrice(p)}</div>
+                    </div>
+                </div>
+            `).join('');
+            container.classList.remove('hidden');
+        } else {
+            container.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">No results found</div>';
+            container.classList.remove('hidden');
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('stat-items').textContent = AppState.salesCount;
+        document.getElementById('stat-users').textContent = Math.floor(AppState.activeUsers * 0.8);
+        document.getElementById('stat-volume').textContent = '$' + Math.floor(AppState.volume);
+    }
     </script>
 </body>
 </html>
-
-
