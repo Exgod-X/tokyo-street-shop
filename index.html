@@ -7,10 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Supabase CDN with fallback check -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" 
-            onload="console.log('✅ Supabase script loaded from CDN')" 
-            onerror="console.error('❌ Failed to load Supabase CDN')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #0a0a0f; color: #fff; overflow-x: hidden; }
@@ -19,12 +16,10 @@
         .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .cart-sidebar.open { transform: translateX(0); }
         
-        /* Connection status indicator */
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         .status-online { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
-        .status-offline { background: #ff0033; animation: blink 1s infinite; }
+        .status-offline { background: #ff0033; }
         .status-local { background: #ffff00; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         
         .toast { transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
         .toast.show { transform: translateX(0); }
@@ -32,10 +27,10 @@
 </head>
 <body class="antialiased">
 
-    <!-- Connection Warning Banner (shows if Supabase fails) -->
+    <!-- Local Mode Indicator (shows only when Supabase fails) -->
     <div id="connection-banner" class="hidden fixed top-0 w-full z-[200] bg-yellow-600 text-black p-2 text-center text-sm font-bold">
-        ⚠️ OFFLINE MODE: Using local storage (accounts will save on this computer only)
-        <button onclick="retryConnection()" class="ml-2 bg-black text-yellow-400 px-2 py-1 rounded text-xs">Retry Connection</button>
+        ⚠️ OFFLINE MODE: Using local storage only
+        <button onclick="location.reload()" class="ml-2 bg-black text-yellow-400 px-3 py-1 rounded text-xs hover:bg-gray-800">Reconnect</button>
     </div>
 
     <!-- Status Bar -->
@@ -43,12 +38,10 @@
         <div class="flex items-center gap-4">
             <span class="flex items-center">
                 <span id="status-dot" class="status-dot status-offline"></span>
-                <span id="auth-status" class="text-gray-400">CHECKING...</span>
+                <span id="auth-status" class="text-gray-400">CONNECTING...</span>
             </span>
         </div>
-        <div id=" UserInfo" class="text-gray-400 hidden">
-            Local Mode
-        </div>
+        <div class="text-gray-500">TOKYO STREET SYSTEM</div>
     </div>
 
     <!-- Toast Container -->
@@ -70,12 +63,7 @@
             <div class="relative z-10 w-full max-w-md mx-auto">
                 <div class="mb-8">
                     <h2 id="form-title" class="text-3xl font-bold text-white mb-2">Sign In</h2>
-                    <p class="text-gray-400">Enter your details to continue.</p>
-                </div>
-
-                <!-- Connection Debug Info -->
-                <div id="debug-info" class="hidden mb-4 p-3 bg-gray-800 rounded text-xs text-gray-300 font-mono border border-gray-600">
-                    Checking connection...
+                    <p id="form-subtitle" class="text-gray-400">Welcome back! Please enter your details.</p>
                 </div>
 
                 <!-- Login Form -->
@@ -83,26 +71,34 @@
                     <div>
                         <label class="text-sm text-gray-300 block mb-1">Email</label>
                         <input type="email" id="login-email" required
-                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none">
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none transition-all">
                     </div>
 
                     <div>
                         <label class="text-sm text-gray-300 block mb-1">Password</label>
                         <input type="password" id="login-password" required
-                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none">
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none transition-all">
                     </div>
 
                     <div id="login-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded border border-red-500/20"></div>
 
                     <button type="submit" id="login-btn" 
-                            class="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all">
+                            class="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02]">
                         Sign In
                     </button>
 
-                    <p class="text-center text-gray-400 text-sm mt-4">
+                    <div class="flex items-center justify-between text-sm text-gray-400">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-white/5">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="text-pink-400 hover:text-pink-300">Forgot password?</a>
+                    </div>
+
+                    <p class="text-center text-gray-400 text-sm">
                         Don't have an account? 
                         <button type="button" onclick="toggleAuthMode()" class="text-pink-400 hover:text-pink-300 font-semibold ml-1">
-                            Sign up
+                            Sign up for free
                         </button>
                     </p>
                 </form>
@@ -112,40 +108,45 @@
                     <div>
                         <label class="text-sm text-gray-300 block mb-1">Username <span class="text-red-400">*</span></label>
                         <input type="text" id="reg-username" required
-                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none">
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none transition-all">
                     </div>
 
                     <div>
                         <label class="text-sm text-gray-300 block mb-1">Email <span class="text-red-400">*</span></label>
                         <input type="email" id="reg-email" required
-                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none">
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none transition-all">
                     </div>
 
                     <div>
                         <label class="text-sm text-gray-300 block mb-1">Password <span class="text-red-400">*</span> (min 6 chars)</label>
                         <input type="password" id="reg-password" required minlength="6"
-                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none">
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none transition-all">
                     </div>
 
                     <div>
                         <label class="text-sm text-gray-300 block mb-1">Confirm Password <span class="text-red-400">*</span></label>
                         <input type="password" id="reg-confirm" required
-                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none">
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none transition-all">
                     </div>
 
                     <div id="register-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded border border-red-500/20"></div>
                     
                     <div id="register-success" class="hidden text-emerald-400 text-sm text-center bg-emerald-500/10 py-3 rounded border border-emerald-500/20">
                         <div class="font-bold mb-1">✓ Account Created!</div>
-                        <div id="success-message">You can now log in.</div>
+                        <div>Check your email to confirm your account.</div>
                     </div>
 
                     <button type="submit" id="register-btn" 
-                            class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all">
+                            class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02]">
                         Create Account
                     </button>
 
-                    <p class="text-center text-gray-400 text-sm mt-4">
+                    <div class="flex items-start gap-2 text-xs text-gray-500">
+                        <input type="checkbox" id="terms-checkbox" required class="mt-0.5 w-4 h-4 rounded border-gray-600 bg-white/5">
+                        <span>I agree to the <a href="#" class="text-pink-400 hover:underline">Terms of Service</a> and <a href="#" class="text-pink-400 hover:underline">Privacy Policy</a></span>
+                    </div>
+
+                    <p class="text-center text-gray-400 text-sm">
                         Already have an account? 
                         <button type="button" onclick="toggleAuthMode()" class="text-cyan-400 hover:text-cyan-300 font-semibold ml-1">
                             Sign in
@@ -161,10 +162,13 @@
         <nav class="fixed top-8 w-full z-40 bg-black/80 backdrop-blur-md border-b border-white/10 p-4">
             <div class="flex justify-between items-center max-w-7xl mx-auto">
                 <div class="flex items-center gap-3">
-                    <div class="text-2xl font-black fontDisplay">TOKYO STREET</div>
+                    <div class="text-2xl font-black fontDisplay tracking-tighter">TOKYO STREET</div>
                     <span id="mode-badge" class="hidden text-xs bg-yellow-600 text-black px-2 py-1 rounded font-bold">LOCAL MODE</span>
                 </div>
-                <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 font-semibold">Logout</button>
+                <div class="flex items-center gap-4">
+                    <span id="user-display" class="text-sm text-gray-400 hidden"></span>
+                    <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 font-semibold text-sm">Logout</button>
+                </div>
             </div>
         </nav>
         
@@ -173,17 +177,17 @@
             <p class="text-gray-400 mb-8">You are logged in successfully.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div class="p-6 bg-gray-900 rounded-xl border border-white/10">
+                <div class="p-6 bg-gray-900 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-colors">
                     <div class="text-3xl mb-2">👕</div>
                     <h3 class="font-bold mb-2">Anime Hoodies</h3>
                     <p class="text-sm text-gray-400">Premium quality streetwear</p>
                 </div>
-                <div class="p-6 bg-gray-900 rounded-xl border border-white/10">
+                <div class="p-6 bg-gray-900 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-colors">
                     <div class="text-3xl mb-2">⚡</div>
                     <h3 class="font-bold mb-2">Fast Shipping</h3>
                     <p class="text-sm text-gray-400">Worldwide delivery</p>
                 </div>
-                <div class="p-6 bg-gray-900 rounded-xl border border-white/10">
+                <div class="p-6 bg-gray-900 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-colors">
                     <div class="text-3xl mb-2">🔒</div>
                     <h3 class="font-bold mb-2">Secure</h3>
                     <p class="text-sm text-gray-400">Protected checkout</p>
@@ -194,7 +198,7 @@
 
     <script>
         // ==========================================
-        // CONFIGURATION & SETUP
+        // CONFIGURATION
         // ==========================================
         
         const SUPABASE_URL = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
@@ -205,52 +209,34 @@
         let isLocalMode = false;
         
         // ==========================================
-        // INITIALIZATION (Wait for everything to load)
+        // INITIALIZATION
         // ==========================================
         
         window.addEventListener('load', async function() {
-            updateDebug('Page loaded. Checking Supabase...');
-            
-            // Wait a moment for scripts to initialize
-            setTimeout(async () => {
-                await initializeAuth();
-            }, 500);
+            await initializeAuth();
         });
         
         async function initializeAuth() {
-            // Check if Supabase library loaded from CDN
             if (typeof supabase === 'undefined') {
-                updateDebug('❌ Supabase library not loaded from CDN. Switching to local mode.');
+                console.error('Supabase library not loaded');
                 enableLocalMode();
                 return;
             }
             
             try {
-                updateDebug('Creating Supabase client...');
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                
-                // Test the connection with a simple request
-                updateDebug('Testing connection...');
                 const { data, error } = await supabaseClient.auth.getSession();
                 
-                if (error) {
-                    throw error;
-                }
+                if (error) throw error;
                 
-                // Success!
                 isSupabaseConnected = true;
                 updateStatus('online', 'CONNECTED');
-                updateDebug('✅ Connected to Supabase successfully!');
                 
-                // Check if user is already logged in
                 const { data: { user } } = await supabaseClient.auth.getUser();
-                if (user) {
-                    enterApp(user);
-                }
+                if (user) enterApp(user);
                 
             } catch (err) {
-                updateDebug('❌ Supabase connection failed: ' + err.message);
-                console.error('Supabase error:', err);
+                console.error('Connection failed:', err);
                 enableLocalMode();
             }
         }
@@ -260,13 +246,9 @@
             updateStatus('local', 'LOCAL MODE');
             document.getElementById('connection-banner').classList.remove('hidden');
             document.getElementById('mode-badge').classList.remove('hidden');
-            updateDebug('Using local storage mode (no internet required)');
             
-            // Check for existing local session
             const localUser = localStorage.getItem('tokyo_street_user');
-            if (localUser) {
-                enterApp(JSON.parse(localUser));
-            }
+            if (localUser) enterApp(JSON.parse(localUser));
         }
         
         function updateStatus(status, text) {
@@ -277,19 +259,6 @@
             label.textContent = text;
             label.className = status === 'online' ? 'text-emerald-400' : 
                              status === 'local' ? 'text-yellow-400' : 'text-red-400';
-        }
-        
-        function updateDebug(msg) {
-            console.log(msg);
-            const debugBox = document.getElementById('debug-info');
-            if (debugBox) {
-                debugBox.classList.remove('hidden');
-                debugBox.innerHTML += '<div>' + msg + '</div>';
-            }
-        }
-        
-        function retryConnection() {
-            location.reload();
         }
         
         // ==========================================
@@ -303,11 +272,9 @@
             const confirmPassword = document.getElementById('reg-confirm').value;
             const btn = document.getElementById('register-btn');
             
-            // Clear previous messages
             document.getElementById('register-error').classList.add('hidden');
             document.getElementById('register-success').classList.add('hidden');
             
-            // Validation
             if (!username || !email || !password) {
                 showError('Please fill in all fields', 'register-error');
                 return;
@@ -322,14 +289,14 @@
             }
             
             btn.disabled = true;
+            const originalText = btn.textContent;
             btn.textContent = 'Creating account...';
             
             try {
                 if (isLocalMode || !isSupabaseConnected) {
-                    // LOCAL MODE: Save to localStorage
+                    // Local Storage Mode
                     const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
                     
-                    // Check if email exists
                     if (users.find(u => u.email === email)) {
                         throw new Error('Email already registered');
                     }
@@ -341,20 +308,19 @@
                         created_at: new Date().toISOString()
                     };
                     
-                    users.push({ ...newUser, password: password }); // In real app, never store plain text passwords!
+                    users.push({ ...newUser, password: password });
                     localStorage.setItem('tokyo_street_users', JSON.stringify(users));
                     
-                    showSuccess('Account created locally! You can now log in.');
-                    showToast('Account created (Local Mode)', 'success');
+                    document.getElementById('register-success').classList.remove('hidden');
+                    showToast('Account created!', 'success');
                     
                 } else {
-                    // SUPABASE MODE
+                    // Supabase Mode
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
                         options: {
-                            data: { username: username },
-                            emailRedirectTo: window.location.href
+                            data: { username: username }
                         }
                     });
                     
@@ -362,13 +328,10 @@
                     
                     if (data.user) {
                         if (data.session) {
-                            // Email confirmation is disabled
                             enterApp(data.user);
                         } else {
-                            // Email confirmation required
-                            showSuccess('Account created! Check your email to confirm.');
-                            document.getElementById('success-message').textContent = 
-                                'Check your email (' + email + ') for confirmation link.';
+                            document.getElementById('register-success').classList.remove('hidden');
+                            showToast('Check your email to confirm!', 'success');
                         }
                     }
                 }
@@ -376,7 +339,7 @@
                 showError(err.message, 'register-error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Create Account';
+                btn.textContent = originalText;
             }
         }
         
@@ -393,19 +356,16 @@
             }
             
             btn.disabled = true;
+            const originalText = btn.textContent;
             btn.textContent = 'Logging in...';
             
             try {
                 if (isLocalMode || !isSupabaseConnected) {
-                    // LOCAL MODE
                     const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
                     const user = users.find(u => u.email === email && u.password === password);
                     
-                    if (!user) {
-                        throw new Error('Invalid email or password');
-                    }
+                    if (!user) throw new Error('Invalid email or password');
                     
-                    // Save session
                     const sessionUser = {
                         id: user.id,
                         email: user.email,
@@ -414,26 +374,21 @@
                     localStorage.setItem('tokyo_street_user', JSON.stringify(sessionUser));
                     
                     enterApp(sessionUser);
-                    showToast('Welcome back, ' + user.user_metadata.username + '!', 'success');
                     
                 } else {
-                    // SUPABASE MODE
                     const { data, error } = await supabaseClient.auth.signInWithPassword({
                         email: email,
                         password: password
                     });
                     
                     if (error) throw error;
-                    
-                    if (data.user) {
-                        enterApp(data.user);
-                    }
+                    if (data.user) enterApp(data.user);
                 }
             } catch (err) {
                 showError(err.message, 'login-error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Sign In';
+                btn.textContent = originalText;
             }
         }
         
@@ -451,43 +406,50 @@
             document.getElementById('main-app').classList.add('opacity-100');
             
             const username = user.user_metadata?.username || user.email;
-            showToast('Welcome, ' + username + '!', 'success');
+            document.getElementById('user-display').textContent = 'Welcome, ' + username;
+            document.getElementById('user-display').classList.remove('hidden');
+            
+            showToast('Welcome back, ' + username + '!', 'success');
         }
         
         function toggleAuthMode() {
-            document.getElementById('login-form').classList.toggle('hidden');
-            document.getElementById('register-form').classList.toggle('hidden');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+            
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
             document.getElementById('login-error').classList.add('hidden');
             document.getElementById('register-error').classList.add('hidden');
             document.getElementById('register-success').classList.add('hidden');
             
-            // Update title
-            const title = document.getElementById('form-title');
-            title.textContent = document.getElementById('login-form').classList.contains('hidden') ? 'Create Account' : 'Sign In';
+            if (loginForm.classList.contains('hidden')) {
+                title.textContent = 'Create Account';
+                subtitle.textContent = 'Join the anime streetwear community.';
+            } else {
+                title.textContent = 'Sign In';
+                subtitle.textContent = 'Welcome back! Please enter your details.';
+            }
         }
         
         function showError(message, elementId) {
             const el = document.getElementById(elementId);
             el.textContent = message;
             el.classList.remove('hidden');
-        }
-        
-        function showSuccess(message) {
-            const el = document.getElementById('register-success');
-            document.getElementById('success-message').textContent = message;
-            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
         }
         
         function showToast(message, type) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const colors = {
-                success: 'border-emerald-500',
-                error: 'border-red-500',
-                info: 'border-cyan-500'
+                success: 'border-emerald-500 text-emerald-400',
+                error: 'border-red-500 text-red-400',
+                info: 'border-cyan-500 text-cyan-400'
             };
-            toast.className = `toast pointer-events-auto bg-black/90 border-l-4 ${colors[type]} p-4 rounded shadow-2xl mb-2 text-white text-sm`;
-            toast.textContent = message;
+            toast.className = `toast pointer-events-auto bg-black/90 border-l-4 ${colors[type]} p-4 rounded shadow-2xl flex items-center gap-3 mb-2`;
+            toast.innerHTML = `<span class="text-lg">${type === 'success' ? '✓' : type === 'error' ? '!' : 'ℹ'}</span><span class="text-sm text-white">${message}</span>`;
             container.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 100);
             setTimeout(() => {
