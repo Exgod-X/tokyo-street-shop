@@ -3,1359 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https://kimi-web-img.moonshot.cn https://*.unsplash.com data: blob:; connect-src 'self' wss: https:; frame-ancestors 'none';">
     <title>TOKYO STREET | Live Dynamic Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN with fallback check -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" 
+            onload="console.log('✅ Supabase script loaded from CDN')" 
+            onerror="console.error('❌ Failed to load Supabase CDN')"></script>
+    
     <style>
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-pink: #ff00ff;
-            --neon-yellow: #ffff00;
-            --security-green: #00ff41;
-            --danger-red: #ff0033;
-            --live-orange: #ff6600;
-        }
-        
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: #0a0a0f;
-            color: #fff;
-            overflow-x: hidden;
-        }
-        
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #0a0a0f; color: #fff; overflow-x: hidden; }
         .fontDisplay { font-family: 'Orbitron', monospace; }
-        .fontMono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Live Pulse Animation */
-        .live-indicator {
-            animation: live-pulse 2s infinite;
-            box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7);
-        }
-        
-        @keyframes live-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 255, 65, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 65, 0); }
-        }
-        
-        .stock-pulse { animation: stock-blink 1s infinite; }
-        @keyframes stock-blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* Dynamic Data Stream Effect */
-        .data-stream {
-            background: linear-gradient(180deg, transparent 0%, rgba(0,243,255,0.1) 50%, transparent 100%);
-            animation: stream-flow 3s linear infinite;
-        }
-        
-        @keyframes stream-flow {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-        
-        /* Real-time Notification Toast */
-        .toast {
-            transform: translateX(120%);
-            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        .toast.show { transform: translateX(0); }
-        
-        /* Dynamic Marquee */
-        .marquee-container { overflow: hidden; }
-        .marquee-content {
-            display: flex;
-            animation: marquee 20s linear infinite;
-        }
-        
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        
-        /* Glitch Effects */
-        .glitch {
-            position: relative;
-            animation: glitch-skew 1s infinite linear alternate-reverse;
-        }
-        
-        .glitch::before, .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .glitch::before {
-            left: 2px;
-            text-shadow: -2px 0px var(--neon-pink);
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim 5s infinite linear alternate-reverse;
-        }
-        
-        .glitch::after {
-            left: -2px;
-            text-shadow: -2px 0px var(--neon-cyan);
-            clip: rect(44px, 450px, 56px, 0);
-            animation: glitch-anim2 5s infinite linear alternate-reverse;
-        }
-        
-        @keyframes glitch-anim {
-            0% { clip: rect(12px, 9999px, 52px, 0); }
-            20% { clip: rect(65px, 9999px, 11px, 0); }
-            100% { clip: rect(55px, 9999px, 99px, 0); }
-        }
-        
-        @keyframes glitch-anim2 {
-            0% { clip: rect(65px, 9999px, 99px, 0); }
-            20% { clip: rect(12px, 9999px, 52px, 0); }
-            100% { clip: rect(12px, 9999px, 52px, 0); }
-        }
-        
-        /* Debug Panel */
-        .debug-panel {
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid #ff0033;
-            color: #ff0033;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        /* Dynamic Price Flash */
-        .price-flash {
-            animation: price-flash-animation 0.5s ease-out;
-        }
-        
-        @keyframes price-flash-animation {
-            0% { color: var(--neon-yellow); transform: scale(1.2); }
-            100% { color: inherit; transform: scale(1); }
-        }
-        
-        /* Chat Widget */
-        .chat-message {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: message-in 0.3s forwards;
-        }
-        
-        @keyframes message-in {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Loading Skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, #1a1a2e 25%, #252540 50%, #1a1a2e 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-        }
-        
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        /* Product Card Dynamics */
-        .product-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: linear-gradient(135deg, rgba(21,21,32,0.9) 0%, rgba(21,21,32,0.6) 100%);
-            backdrop-filter: blur(10px);
-        }
-        
-        .product-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            border-color: var(--neon-cyan);
-            box-shadow: 0 20px 40px rgba(0, 243, 255, 0.2);
-        }
-        
-        /* Cart Dynamics */
-        .cart-sidebar {
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
+        .product-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: linear-gradient(135deg, rgba(21,21,32,0.9) 0%, rgba(21,21,32,0.6) 100%); backdrop-filter: blur(10px); }
+        .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .cart-sidebar.open { transform: translateX(0); }
         
-        /* Dynamic Search */
-        .search-highlight {
-            background: rgba(0, 243, 255, 0.3);
-            padding: 0 2px;
-            border-radius: 2px;
-        }
-        
-        /* Countdown Timer */
-        .countdown-digit {
-            font-variant-numeric: tabular-nums;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        
-        /* Secure Input */
-        .secure-input {
-            background: rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.3s;
-        }
-        
-        .secure-input:focus {
-            border-color: var(--security-green);
-            box-shadow: 0 0 20px rgba(0,255,65,0.2);
-            outline: none;
-        }
-        
-        /* Dynamic Grid Layout */
-        .masonry-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            grid-auto-rows: masonry;
-        }
-        
-        /* WebSocket Status Indicator */
-        .ws-status {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        
-        .ws-online { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
-        .ws-connecting { background: #ffff00; animation: blink 1s infinite; }
-        .ws-offline { background: #ff0033; }
-        
+        /* Connection status indicator */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-online { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
+        .status-offline { background: #ff0033; animation: blink 1s infinite; }
+        .status-local { background: #ffff00; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         
-        /* Activity Feed */
-        .activity-item {
-            border-left: 2px solid transparent;
-            transition: all 0.3s;
-        }
-        
-        .activity-item.new {
-            border-left-color: var(--neon-cyan);
-            background: rgba(0,243,255,0.05);
-        }
+        .toast { transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast.show { transform: translateX(0); }
     </style>
-    <!-- This loads the security guard from Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="antialiased">
 
-    <!-- Real-time Connection Status Bar -->
+    <!-- Connection Warning Banner (shows if Supabase fails) -->
+    <div id="connection-banner" class="hidden fixed top-0 w-full z-[200] bg-yellow-600 text-black p-2 text-center text-sm font-bold">
+        ⚠️ OFFLINE MODE: Using local storage (accounts will save on this computer only)
+        <button onclick="retryConnection()" class="ml-2 bg-black text-yellow-400 px-2 py-1 rounded text-xs">Retry Connection</button>
+    </div>
+
+    <!-- Status Bar -->
     <div class="fixed top-0 w-full z-50 bg-black/90 border-b border-white/10 px-4 py-2 flex justify-between items-center text-xs font-mono">
         <div class="flex items-center gap-4">
             <span class="flex items-center">
-                <span class="ws-status ws-online" id="ws-indicator"></span>
-                <span class="text-emerald-400">LIVE CONNECTION</span>
+                <span id="status-dot" class="status-dot status-offline"></span>
+                <span id="auth-status" class="text-gray-400">CHECKING...</span>
             </span>
-            <span class="text-gray-500">|</span>
-            <span id="server-time" class="text-cyan-400">00:00:00 UTC</span>
-            <span class="text-gray-500">|</span>
-            <span class="text-gray-400">LATENCY: <span id="latency" class="text-emerald-400">12ms</span></span>
         </div>
-        <div class="flex items-center gap-4">
-            <span class="text-gray-400"><span id="active-users" class="text-pink-500 font-bold">1,247</span> OPERATIVES ONLINE</span>
-            <span class="text-gray-500">|</span>
-            <span id="dynamic-status" class="text-yellow-400 animate-pulse">FLASH SALE ACTIVE</span>
+        <div id=" UserInfo" class="text-gray-400 hidden">
+            Local Mode
         </div>
     </div>
 
-    <!-- Dynamic Toast Notifications Container -->
+    <!-- Toast Container -->
     <div id="toast-container" class="fixed top-16 right-4 z-50 flex flex-col gap-2 w-80 pointer-events-none"></div>
 
     <!-- Auth Modal -->
     <div id="auth-modal" class="fixed inset-0 z-[100] flex overflow-hidden bg-gray-900">
-    
-    <!-- Left Side - Welcome Section with Animated Background -->
-    <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <!-- Dynamic Anime Gradient Background -->
-        <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
-            <!-- Animated Floating Orbs (Anime Energy Effect) -->
-            <div class="absolute top-20 left-20 w-72 h-72 bg-pink-500/30 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
-            <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-            
-            <!-- Dynamic Grid Overlay (Subtle tech-anime vibe) -->
-            <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px); background-size: 50px 50px;"></div>
-        </div>
-
-        <!-- Content -->
-        <div class="relative z-10 flex flex-col justify-center px-16 text-white">
-            <div class="mb-6">
-                <span class="text-6xl font-black fontDisplay tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-pink-300 to-cyan-300">
-                    東京
-                </span>
-            </div>
-            <h1 class="text-5xl font-bold mb-6 leading-tight">
-                Welcome to<br/>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400">Tokyo Street</span>
-            </h1>
-            <p class="text-gray-300 text-lg mb-8 max-w-md leading-relaxed">
-                Discover exclusive anime streetwear from your favorite series. Join thousands of fans worldwide.
-            </p>
-            
-            <!-- Feature List -->
-            <div class="space-y-4 text-sm text-gray-400">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <span>Exclusive Limited Drops</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <span>Premium Quality Materials</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    </div>
-                    <span>Global Shipping</span>
-                </div>
-            </div>
-
-            <!-- Social Proof -->
-            <div class="mt-12 flex items-center gap-4">
-                <div class="flex -space-x-3">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-orange-400 border-2 border-gray-900"></div>
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-400 border-2 border-gray-900"></div>
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-400 border-2 border-gray-900"></div>
-                </div>
-                <p class="text-sm text-gray-400">Join <span class="text-white font-bold">2,000+</span> fans today</p>
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
+            <div class="relative z-10 flex flex-col justify-center px-16 text-white">
+                <h1 class="text-5xl font-bold mb-6">
+                    Welcome to<br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400">Tokyo Street</span>
+                </h1>
+                <p class="text-gray-300 text-lg">Discover exclusive anime streetwear.</p>
             </div>
         </div>
 
-        <!-- Decorative Kanji -->
-        <div class="absolute bottom-10 right-10 text-9xl font-black text-white/5 fontDisplay select-none pointer-events-none">
-            通販
-        </div>
-    </div>
+        <div class="w-full lg:w-1/2 bg-gray-950 flex flex-col justify-center px-8 relative">
+            <div class="relative z-10 w-full max-w-md mx-auto">
+                <div class="mb-8">
+                    <h2 id="form-title" class="text-3xl font-bold text-white mb-2">Sign In</h2>
+                    <p class="text-gray-400">Enter your details to continue.</p>
+                </div>
 
-    <!-- Right Side - Login/Register Form -->
-    <div class="w-full lg:w-1/2 bg-gray-950 flex flex-col justify-center px-8 sm:px-12 lg:px-16 relative overflow-hidden">
-        <!-- Subtle Background Pattern -->
-        <div class="absolute inset-0 opacity-5">
-            <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0); background-size: 20px 20px;"></div>
-        </div>
+                <!-- Connection Debug Info -->
+                <div id="debug-info" class="hidden mb-4 p-3 bg-gray-800 rounded text-xs text-gray-300 font-mono border border-gray-600">
+                    Checking connection...
+                </div>
 
-        <div class="relative z-10 w-full max-w-md mx-auto">
-            
-            <!-- Header -->
-            <div class="mb-10">
-                <h2 id="form-title" class="text-3xl font-bold text-white mb-2">Sign In</h2>
-                <p id="form-subtitle" class="text-gray-400">Welcome back! Please enter your details.</p>
+                <!-- Login Form -->
+                <form id="login-form" class="space-y-6" onsubmit="event.preventDefault(); handleLogin();">
+                    <div>
+                        <label class="text-sm text-gray-300 block mb-1">Email</label>
+                        <input type="email" id="login-email" required
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-300 block mb-1">Password</label>
+                        <input type="password" id="login-password" required
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none">
+                    </div>
+
+                    <div id="login-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded border border-red-500/20"></div>
+
+                    <button type="submit" id="login-btn" 
+                            class="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all">
+                        Sign In
+                    </button>
+
+                    <p class="text-center text-gray-400 text-sm mt-4">
+                        Don't have an account? 
+                        <button type="button" onclick="toggleAuthMode()" class="text-pink-400 hover:text-pink-300 font-semibold ml-1">
+                            Sign up
+                        </button>
+                    </p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="hidden space-y-5" onsubmit="event.preventDefault(); handleRegister();">
+                    <div>
+                        <label class="text-sm text-gray-300 block mb-1">Username <span class="text-red-400">*</span></label>
+                        <input type="text" id="reg-username" required
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-300 block mb-1">Email <span class="text-red-400">*</span></label>
+                        <input type="email" id="reg-email" required
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-pink-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-300 block mb-1">Password <span class="text-red-400">*</span> (min 6 chars)</label>
+                        <input type="password" id="reg-password" required minlength="6"
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-300 block mb-1">Confirm Password <span class="text-red-400">*</span></label>
+                        <input type="password" id="reg-confirm" required
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white focus:border-cyan-500 outline-none">
+                    </div>
+
+                    <div id="register-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded border border-red-500/20"></div>
+                    
+                    <div id="register-success" class="hidden text-emerald-400 text-sm text-center bg-emerald-500/10 py-3 rounded border border-emerald-500/20">
+                        <div class="font-bold mb-1">✓ Account Created!</div>
+                        <div id="success-message">You can now log in.</div>
+                    </div>
+
+                    <button type="submit" id="register-btn" 
+                            class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all">
+                        Create Account
+                    </button>
+
+                    <p class="text-center text-gray-400 text-sm mt-4">
+                        Already have an account? 
+                        <button type="button" onclick="toggleAuthMode()" class="text-cyan-400 hover:text-cyan-300 font-semibold ml-1">
+                            Sign in
+                        </button>
+                    </p>
+                </form>
             </div>
-
-            <!-- DEBUG PANEL (Visible when there are errors) -->
-            <div id="debug-panel" class="hidden debug-panel rounded-lg p-3 mb-4">
-                <div class="font-bold mb-1 text-red-400">🔧 DEBUG INFO (Check Console for details):</div>
-                <div id="debug-content" class="space-y-1"></div>
-            </div>
-
-            <!-- Login Form -->
-            <form id="login-form" class="space-y-6" onsubmit="event.preventDefault(); dynamicLogin();">
-                
-                <!-- Email/Username Input -->
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Email</label>
-                    <input type="email" id="login-username" required
-                           class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all"
-                           placeholder="Enter your email">
-                </div>
-
-                <!-- Password Input -->
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Password</label>
-                    <input type="password" id="login-password" required
-                           class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
-                           placeholder="••••••••">
-                </div>
-
-                <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between text-sm">
-                    <label class="flex items-center gap-2 text-gray-400 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-white/5 text-pink-500 focus:ring-pink-500/20">
-                        <span>Remember me</span>
-                    </label>
-                    <a href="#" class="text-pink-400 hover:text-pink-300 transition-colors">Forgot password?</a>
-                </div>
-
-                <!-- Error Message -->
-                <div id="login-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
-                    Invalid credentials. Please try again.
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" id="login-btn"
-                        class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:via-purple-500 hover:to-indigo-500 text-white font-semibold shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group">
-                    <span>Sign In</span>
-                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                </button>
-
-                <!-- Divider -->
-                <div class="relative my-6">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-800"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-gray-950 text-gray-500">or continue with</span>
-                    </div>
-                </div>
-
-                <!-- Social Login -->
-                <div class="grid grid-cols-2 gap-4">
-                    <button type="button" class="flex items-center justify-center gap-2 py-2.5 border border-gray-700 rounded-xl text-gray-300 hover:bg-white/5 hover:border-gray-600 transition-all">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                        <span class="text-sm font-medium">Google</span>
-                    </button>
-                    <button type="button" class="flex items-center justify-center gap-2 py-2.5 border border-gray-700 rounded-xl text-gray-300 hover:bg-white/5 hover:border-gray-600 transition-all">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        <span class="text-sm font-medium">GitHub</span>
-                    </button>
-                </div>
-
-                <!-- Toggle Link -->
-                <p class="text-center text-gray-400 text-sm mt-6">
-                    Don't have an account? 
-                    <button type="button" onclick="toggleAuthMode()" class="text-pink-400 hover:text-pink-300 font-semibold transition-colors">
-                        Sign up for free
-                    </button>
-                </p>
-            </form>
-
-            <!-- Register Form (Hidden by default) -->
-            <form id="register-form" class="hidden space-y-5" onsubmit="event.preventDefault(); dynamicRegister();">
-                
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Username <span class="text-red-400">*</span></label>
-                    <input type="text" id="reg-username" required
-                           class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all"
-                           placeholder="Choose a username">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Email <span class="text-red-400">*</span></label>
-                    <input type="email" id="reg-email" required
-                           class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 outline-none transition-all"
-                           placeholder="your@email.com">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Password <span class="text-red-400">*</span></label>
-                    <input type="password" id="reg-password" required oninput="checkPasswordStrength(this.value)"
-                           class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
-                           placeholder="Min 6 characters">
-                    <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden mt-2">
-                        <div id="strength-bar" class="h-full w-0 transition-all duration-300 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"></div>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-300 block">Confirm Password <span class="text-red-400">*</span></label>
-                    <input type="password" id="reg-confirm" required
-                           class="w-full px-4 py-3 rounded-xl bg-white/5 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all"
-                           placeholder="Confirm your password">
-                </div>
-
-                <!-- Error Message for Registration -->
-                <div id="register-error" class="hidden text-red-400 text-sm text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
-                    Registration failed. Please try again.
-                </div>
-
-                <!-- Success Message (Email Confirmation) -->
-                <div id="register-success" class="hidden text-emerald-400 text-sm text-center bg-emerald-500/10 py-3 rounded-lg border border-emerald-500/20">
-                    <div class="font-bold mb-1">✓ Account Created!</div>
-                    <div>Check your email to confirm your account. If you don't see it, check your spam folder.</div>
-                    <button type="button" onclick="resendConfirmation()" class="mt-2 text-xs underline hover:text-emerald-300">
-                        Resend confirmation email
-                    </button>
-                </div>
-
-                <button type="submit" id="register-btn" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
-                    Create Account
-                </button>
-
-                <div class="flex items-start gap-2 text-xs text-gray-500 mt-4">
-                    <input type="checkbox" id="terms-checkbox" required class="mt-0.5 w-4 h-4 rounded border-gray-600 bg-white/5 text-pink-500">
-                    <span>I agree to the <a href="#" class="text-pink-400 hover:underline">Terms of Service</a> and <a href="#" class="text-pink-400 hover:underline">Privacy Policy</a></span>
-                </div>
-
-                <p class="text-center text-gray-400 text-sm mt-6">
-                    Already have an account? 
-                    <button type="button" onclick="toggleAuthMode()" class="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
-                        Sign in
-                    </button>
-                </p>
-            </form>
-
         </div>
     </div>
-</div>
 
-    <!-- Main Dynamic Application -->
+    <!-- Main App -->
     <div id="main-app" class="opacity-20 pointer-events-none transition-all duration-1000 pt-16">
-        
-        <!-- Dynamic Navigation -->
-        <nav class="fixed top-8 w-full z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center space-x-4">
-                        <div class="text-2xl font-black fontDisplay tracking-tighter glitch" data-text="TOKYO STREET">TOKYO STREET</div>
-                        <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/30">
-                            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                            <span class="text-xs font-mono text-emerald-400">SECURE</span>
-                        </div>
-                    </div>
-
-                    <div class="flex-1 max-w-lg mx-8">
-                        <div class="relative">
-                            <input type="text" id="global-search" oninput="debouncedSearch(this.value)" 
-                                   class="w-full bg-white/5 border border-white/10 rounded-full px-5 py-2 pl-10 text-sm focus:border-cyan-400 focus:outline-none transition-all"
-                                   placeholder="Search inventory...">
-                            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl hidden max-h-96 overflow-y-auto"></div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center space-x-4">
-                        <button onclick="toggleLiveChat()" class="relative p-2 hover:bg-white/10 rounded-full transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span id="chat-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">3</span>
-                        </button>
-                        
-                        <button onclick="toggleCart()" class="relative p-2 hover:bg-white/10 rounded-full transition-colors group">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                            <span id="cart-count" class="absolute -top-1 -right-1 bg-pink-500 text-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center transform scale-0 transition-transform duration-300">0</span>
-                        </button>
-                        
-                        <button onclick="logout()" class="p-2 hover:bg-red-500/20 text-red-400 rounded-full transition-colors" title="Disconnect">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                        </button>
-                    </div>
+        <nav class="fixed top-8 w-full z-40 bg-black/80 backdrop-blur-md border-b border-white/10 p-4">
+            <div class="flex justify-between items-center max-w-7xl mx-auto">
+                <div class="flex items-center gap-3">
+                    <div class="text-2xl font-black fontDisplay">TOKYO STREET</div>
+                    <span id="mode-badge" class="hidden text-xs bg-yellow-600 text-black px-2 py-1 rounded font-bold">LOCAL MODE</span>
                 </div>
+                <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 font-semibold">Logout</button>
             </div>
         </nav>
-
-        <!-- Dynamic Hero with Real-time Data -->
-        <section class="relative pt-32 pb-20 px-4 overflow-hidden min-h-screen flex items-center">
-            <div class="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-purple-900/20 to-pink-900/20 animate-pulse"></div>
+        
+        <div class="pt-32 p-8 text-center min-h-screen">
+            <h1 class="text-4xl font-bold mb-4 fontDisplay">Welcome to the Store!</h1>
+            <p class="text-gray-400 mb-8">You are logged in successfully.</p>
             
-            <!-- Live Activity Ticker -->
-            <div class="absolute top-24 left-0 right-0 bg-black/50 border-y border-white/10 py-2 overflow-hidden marquee-container">
-                <div class="marquee-content whitespace-nowrap" id="activity-ticker">
-                    <span class="inline-block px-4 text-sm text-gray-400">
-                        <span class="text-emerald-400">●</span> ShadowMonarch42 purchased Goku Hoodie - 2m ago
-                        <span class="mx-4 text-gray-600">|</span>
-                        <span class="text-pink-400">●</span> LightningFlash claimed 15% discount - 5s ago
-                        <span class="mx-4 text-gray-600">|</span>
-                        <span class="text-cyan-400">●</span> New drop incoming: Solo Leveling S2 Collection - 15m
-                        <span class="mx-4 text-gray-600">|</span>
-                        <span class="text-yellow-400">⚡</span> Only 3 left: Gojo Unlimited Void Tee
-                        <span class="mx-4 text-gray-600">|</span>
-                    </span>
-                    <span class="inline-block px-4 text-sm text-gray-400">
-                        <span class="text-emerald-400">●</span> ShadowMonarch42 purchased Goku Hoodie - 2m ago
-                        <span class="mx-4 text-gray-600">|</span>
-                        <span class="text-pink-400">●</span> LightningFlash claimed 15% discount - 5s ago
-                        <span class="mx-4 text-gray-600">|</span>
-                        <span class="text-cyan-400">●</span> New drop incoming: Solo Leveling S2 Collection - 15m
-                        <span class="mx-4 text-gray-600">|</span>
-                    </span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="p-6 bg-gray-900 rounded-xl border border-white/10">
+                    <div class="text-3xl mb-2">👕</div>
+                    <h3 class="font-bold mb-2">Anime Hoodies</h3>
+                    <p class="text-sm text-gray-400">Premium quality streetwear</p>
                 </div>
-            </div>
-
-            <div class="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center mt-12">
-                <div class="space-y-6">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 rounded-full animate-pulse">
-                        <span class="w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
-                        <span class="text-pink-400 text-xs font-bold tracking-wider">FLASH SALE ENDS IN:</span>
-                        <span id="flash-countdown" class="font-mono text-white font-bold">04:59:59</span>
-                    </div>
-                    
-                    <h1 class="text-6xl md:text-8xl font-black fontDisplay leading-none tracking-tighter">
-                        DYNAMIC
-                        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-yellow-400">STREETWEAR</span>
-                    </h1>
-                    
-                    <p class="text-lg text-gray-400 max-w-lg">
-                        Real-time inventory. Live marketplace dynamics. Prices fluctuate based on demand. 
-                        <span class="text-cyan-400" id="dynamic-price-display">Current market volatility: HIGH</span>
-                    </p>
-
-                    <div class="flex flex-wrap gap-4">
-                        <button onclick="scrollToCollection()" class="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-black text-lg rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-cyan-500/25">
-                            ENTER MARKETPLACE
-                        </button>
-                        <button onclick="toggleLiveFeed()" class="px-8 py-4 border border-white/20 hover:border-cyan-400 hover:bg-cyan-400/10 transition-all rounded-lg font-bold">
-                            VIEW LIVE FEED
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 pt-8 border-t border-white/10">
-                        <div class="text-center">
-                            <div class="text-3xl font-black text-cyan-400 fontDisplay" id="stat-items">0</div>
-                            <div class="text-xs text-gray-500 uppercase">Items Sold Today</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-black text-pink-500 fontDisplay" id="stat-users">0</div>
-                            <div class="text-xs text-gray-500 uppercase">Active Bidders</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-black text-yellow-400 fontDisplay" id="stat-volume">$0</div>
-                            <div class="text-xs text-gray-500 uppercase">Volume (24h)</div>
-                        </div>
-                    </div>
+                <div class="p-6 bg-gray-900 rounded-xl border border-white/10">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h3 class="font-bold mb-2">Fast Shipping</h3>
+                    <p class="text-sm text-gray-400">Worldwide delivery</p>
                 </div>
-
-                <div class="relative">
-                    <div class="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-pink-500 rounded-2xl opacity-20 blur-2xl animate-pulse"></div>
-                    <img src="https://kimi-web-img.moonshot.cn/img/dragonballclothing.com/3e64bb40a7ae7563e6f3fd9404cbbba60926e218.jpg" 
-                         alt="Featured" 
-                         class="relative w-full h-auto rounded-2xl shadow-2xl border border-white/10"
-                         id="hero-image">
-                    
-                    <!-- Dynamic Price Tag -->
-                    <div class="absolute -bottom-6 -right-6 bg-black/90 backdrop-blur-xl border border-white/20 p-4 rounded-xl shadow-2xl">
-                        <div class="text-xs text-gray-400 mb-1">CURRENT PRICE</div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-black text-white" id="hero-price">$89.99</span>
-                            <span class="text-sm text-emerald-400 flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
-                                12%
-                            </span>
-                        </div>
-                        <div class="text-xs text-gray-500 mt-1">Updates every 30s</div>
-                    </div>
+                <div class="p-6 bg-gray-900 rounded-xl border border-white/10">
+                    <div class="text-3xl mb-2">🔒</div>
+                    <h3 class="font-bold mb-2">Secure</h3>
+                    <p class="text-sm text-gray-400">Protected checkout</p>
                 </div>
-            </div>
-        </section>
-
-        <!-- Dynamic Filters & Live Updates -->
-        <section id="collection" class="py-20 px-4 relative">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                    <div>
-                        <h2 class="text-4xl font-black fontDisplay mb-2">LIVE INVENTORY</h2>
-                        <p class="text-gray-400 text-sm">Prices update in real-time based on demand algorithms</p>
-                    </div>
-                    
-                    <div class="flex flex-wrap gap-3 items-center">
-                        <select id="sort-select" onchange="sortProducts(this.value)" class="bg-black/50 border border-white/20 rounded-lg px-4 py-2 text-sm focus:border-cyan-400 outline-none">
-                            <option value="popular">Most Popular</option>
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
-                            <option value="newest">Newest Drops</option>
-                            <option value="trending">Trending Now</option>
-                        </select>
-                        
-                        <div class="flex gap-2" id="category-filters">
-                            <button onclick="filterCategory('all')" class="category-pill active px-4 py-2 rounded-full text-sm border border-white/20 hover:border-cyan-400 transition-all" data-cat="all">All</button>
-                            <button onclick="filterCategory('dragonball')" class="category-pill px-4 py-2 rounded-full text-sm border border-white/20 hover:border-cyan-400 transition-all" data-cat="dragonball">DBZ</button>
-                            <button onclick="filterCategory('sololeveling')" class="category-pill px-4 py-2 rounded-full text-sm border border-white/20 hover:border-cyan-400 transition-all" data-cat="sololeveling">Solo Leveling</button>
-                            <button onclick="filterCategory('jjk')" class="category-pill px-4 py-2 rounded-full text-sm border border-white/20 hover:border-cyan-400 transition-all" data-cat="jjk">JJK</button>
-                            <button onclick="filterCategory('onepiece')" class="category-pill px-4 py-2 rounded-full text-sm border border-white/20 hover:border-cyan-400 transition-all" data-cat="onepiece">One Piece</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dynamic Product Grid -->
-                <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Dynamically populated -->
-                </div>
-
-                <div id="loading-trigger" class="h-20 flex items-center justify-center mt-8">
-                    <div class="flex items-center gap-2 text-cyan-400">
-                        <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
-                        <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                        <div class="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- Live Chat Widget -->
-    <div id="live-chat" class="fixed bottom-4 right-4 w-80 bg-zinc-900 border border-white/20 rounded-2xl shadow-2xl transform translate-y-[120%] transition-transform duration-300 z-40 flex flex-col h-96">
-        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-t-2xl">
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                <span class="font-bold text-sm">OPERATIVE CHAT</span>
-                <span class="text-xs text-gray-500" id="chat-user-count">(42 online)</span>
-            </div>
-            <button onclick="toggleLiveChat()" class="text-gray-400 hover:text-white">×</button>
-        </div>
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm">
-            <!-- Dynamic messages -->
-        </div>
-        <div class="p-3 border-t border-white/10">
-            <div class="flex gap-2">
-                <input type="text" id="chat-input" onkeypress="handleChatKeypress(event)" class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-400 outline-none" placeholder="Transmit message...">
-                <button onclick="sendChatMessage()" class="bg-cyan-500 hover:bg-cyan-400 text-black px-3 py-2 rounded-lg font-bold transition-colors">→</button>
             </div>
         </div>
     </div>
-
-    <!-- Cart Sidebar -->
-    <div id="cart-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity"></div>
-    <aside id="cart-sidebar" class="cart-sidebar fixed right-0 top-0 h-full w-full md:w-96 bg-zinc-950 border-l border-white/10 z-50 shadow-2xl flex flex-col">
-        <div class="p-6 border-b border-white/10 flex justify-between items-center">
-            <h2 class="text-2xl font-black fontDisplay">YOUR CARGO</h2>
-            <button onclick="toggleCart()" class="p-2 hover:bg-white/10 rounded-full">×</button>
-        </div>
-        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-        <div class="p-6 border-t border-white/10 bg-black/20">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-gray-400">Total</span>
-                <span class="text-2xl font-black text-cyan-400" id="cart-total">$0.00</span>
-            </div>
-            <button onclick="dynamicCheckout()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black py-4 rounded-lg transition-all transform hover:scale-[1.02]">
-                EXECUTE TRANSFER
-            </button>
-        </div>
-    </aside>
 
     <script>
-    // Supabase Setup - Use a different variable name to avoid conflict
-    const SUPABASE_URL = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
-    
-    // Create client with different name to avoid conflict with global 'supabase'
-    let supabaseClient;
-    try {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('✓ Supabase client initialized successfully');
-    } catch (e) {
-        console.error('✗ Failed to initialize Supabase:', e);
-        alert('Failed to connect to authentication service. Check console.');
-    }
-
-    // Dynamic State Management
-    const AppState = {
-        user: null,
-        cart: [],
-        products: [],
-        activeUsers: 1247,
-        salesCount: 0,
-        volume: 0,
-        wsStatus: 'online',
-        currentFilter: 'all',
-        chatMessages: [],
-        priceMultiplier: 1.0,
-        lastUpdate: Date.now(),
-        pendingEmail: null // Store email for resend functionality
-    };
-
-    // DEBUG HELPER
-    function logDebug(type, message, data = null) {
-        const panel = document.getElementById('debug-panel');
-        const content = document.getElementById('debug-content');
+        // ==========================================
+        // CONFIGURATION & SETUP
+        // ==========================================
         
-        console.log(`[${type}]`, message, data || '');
+        const SUPABASE_URL = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
         
-        if (panel && content) {
-            panel.classList.remove('hidden');
-            const line = document.createElement('div');
-            line.className = type === 'ERROR' ? 'text-red-400' : 'text-yellow-400';
-            line.textContent = `[${type}] ${message}`;
-            content.appendChild(line);
+        let supabaseClient = null;
+        let isSupabaseConnected = false;
+        let isLocalMode = false;
+        
+        // ==========================================
+        // INITIALIZATION (Wait for everything to load)
+        // ==========================================
+        
+        window.addEventListener('load', async function() {
+            updateDebug('Page loaded. Checking Supabase...');
             
-            // Keep only last 5 messages
-            while (content.children.length > 5) {
-                content.removeChild(content.firstChild);
+            // Wait a moment for scripts to initialize
+            setTimeout(async () => {
+                await initializeAuth();
+            }, 500);
+        });
+        
+        async function initializeAuth() {
+            // Check if Supabase library loaded from CDN
+            if (typeof supabase === 'undefined') {
+                updateDebug('❌ Supabase library not loaded from CDN. Switching to local mode.');
+                enableLocalMode();
+                return;
             }
-        }
-    }
-
-    // Simulated Real-time Database (keep this as is)
-    const LiveDB = {
-        products: [
-            {id: 1, name: "Goku Ultra Instinct Hoodie", category: "dragonball", basePrice: 89.99, stock: 12, demand: 85, image: "https://kimi-web-img.moonshot.cn/img/dragonballclothing.com/56662b2d9ea29ef3b801991e97c0d57d38a07894.jpg", trending: true, views: 342},
-            {id: 2, name: "Shadow Monarch Tee", category: "sololeveling", basePrice: 39.99, stock: 3, demand: 98, image: "https://kimi-web-img.moonshot.cn/img/img.staticdj.com/3767ad8047db1ba458c5bcc0a964db438e6baea7.jpeg", trending: true, views: 891},
-            {id: 3, name: "Saitama Serious Series", category: "opm", basePrice: 34.99, stock: 45, demand: 45, image: "https://kimi-web-img.moonshot.cn/img/sw6.elbenwald.de/eba28def302c043539fd464637af7dc1ce6a0215.jpg", trending: false, views: 123},
-            {id: 4, name: "Luffy Gear 5 Nika", category: "onepiece", basePrice: 44.99, stock: 8, demand: 92, image: "https://kimi-web-img.moonshot.cn/img/i5.walmartimages.com/ddf7a96e529312dfdef09208f6326254f4b5866b.jpeg", trending: true, views: 567},
-            {id: 5, name: "Gojo Unlimited Void", category: "jjk", basePrice: 94.99, stock: 2, demand: 100, image: "https://kimi-web-img.moonshot.cn/img/dragonballzfigures.com/6713c0e803a91bcfb9ab672cba42488d665f5a3a.jpg", trending: true, views: 743},
-            {id: 6, name: "Itadori Sukuna Vessel", category: "jjk", basePrice: 49.99, stock: 15, demand: 67, image: "https://kimi-web-img.moonshot.cn/img/dragonballclothing.com/3e64bb40a7ae7563e6f3fd9404cbbba60926e218.jpg", trending: false, views: 234}
-        ],
-        
-        getDynamicPrice(product) {
-            const timeMultiplier = 1 + (Math.sin(Date.now() / 100000) * 0.1);
-            const demandMultiplier = 1 + ((100 - product.stock) / 100);
-            const hypeMultiplier = product.trending ? 1.15 : 1.0;
-            return (product.basePrice * timeMultiplier * demandMultiplier * hypeMultiplier * AppState.priceMultiplier).toFixed(2);
-        },
-        
-        simulateActivity() {
-            this.products.forEach(p => {
-                if(Math.random() > 0.7 && p.stock > 0) {
-                    p.stock--;
-                    AppState.salesCount++;
-                    AppState.volume += parseFloat(this.getDynamicPrice(p));
-                    showToast(`${p.name} purchased!`, 'success');
-                    updateStats();
-                }
-                if(Math.random() > 0.9 && p.stock < 50) {
-                    p.stock++;
-                    showToast(`${p.name} restocked!`, 'info');
-                }
-            });
             
-            AppState.activeUsers += Math.floor(Math.random() * 10) - 5;
-            document.getElementById('active-users').textContent = AppState.activeUsers.toLocaleString();
-        }
-    };
-
-    // Helper function to show errors with target element support
-    function showError(message, elementId = 'login-error') {
-        const errorDiv = document.getElementById(elementId);
-        if (errorDiv) {
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-            setTimeout(() => errorDiv.classList.add('hidden'), 8000);
-        } else {
-            alert(message);
-        }
-    }
-
-    // Authentication Flow with Supabase
-    async function dynamicLogin() {
-        const email = document.getElementById('login-username').value;
-        const password = document.getElementById('login-password').value;
-        
-        if (!email || !password) {
-            showError('Please enter both email and password', 'login-error');
-            return;
-        }
-        
-        const btn = document.getElementById('login-btn');
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="animate-pulse">Authenticating...</span>';
-        
-        try {
-            logDebug('INFO', 'Attempting login...', { email });
-            
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-            
-            if (error) {
-                logDebug('ERROR', 'Login failed:', error.message);
-                showError(error.message, 'login-error');
-            } else if (data.session) {
-                logDebug('SUCCESS', 'Login successful');
-                AppState.user = data.user;
-                document.getElementById('auth-modal').style.display = 'none';
-                document.getElementById('main-app').classList.remove('opacity-20', 'pointer-events-none');
-                document.getElementById('main-app').classList.add('opacity-100');
-                showToast(`Welcome back!`, 'success');
-            }
-        } catch (err) {
-            logDebug('ERROR', 'Connection error:', err.message);
-            showError('Connection failed. Check console for details.', 'login-error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    }
-
-    async function dynamicRegister() {
-        const username = document.getElementById('reg-username').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const password = document.getElementById('reg-password').value;
-        const confirmPassword = document.getElementById('reg-confirm').value;
-        const termsCheckbox = document.getElementById('terms-checkbox');
-        const btn = document.getElementById('register-btn');
-        const originalText = btn.innerHTML;
-        
-        // Clear previous states
-        document.getElementById('register-error').classList.add('hidden');
-        document.getElementById('register-success').classList.add('hidden');
-        
-        // Validation checks
-        if (!username || !email || !password) {
-            showError('Please fill in all required fields', 'register-error');
-            return;
-        }
-        
-        if (password !== confirmPassword) {
-            showError('Passwords do not match!', 'register-error');
-            return;
-        }
-        
-        if (password.length < 6) {
-            showError('Password must be at least 6 characters', 'register-error');
-            return;
-        }
-        
-        if (!termsCheckbox.checked) {
-            showError('Please accept the Terms of Service and Privacy Policy', 'register-error');
-            return;
-        }
-        
-        // Show loading state
-        btn.disabled = true;
-        btn.innerHTML = '<span class="animate-pulse">Creating account...</span>';
-        
-        try {
-            logDebug('INFO', 'Attempting registration...', { email, username });
-            
-            const { data, error } = await supabaseClient.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        username: username
-                    },
-                    emailRedirectTo: window.location.href // Redirect back to same page after confirmation
-                }
-            });
-            
-            if (error) {
-                logDebug('ERROR', 'Registration error:', error.message);
-                showError(error.message, 'register-error');
-            } else {
-                logDebug('SUCCESS', 'Registration successful', data);
-                AppState.pendingEmail = email;
+            try {
+                updateDebug('Creating Supabase client...');
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 
-                // Hide form elements, show success
-                document.getElementById('register-form').querySelectorAll('input, button[type="submit"]').forEach(el => {
-                    if (el.id !== 'register-success') el.style.display = 'none';
-                });
-                document.getElementById('register-success').classList.remove('hidden');
+                // Test the connection with a simple request
+                updateDebug('Testing connection...');
+                const { data, error } = await supabaseClient.auth.getSession();
                 
-                showToast('Account created! Check your email.', 'success');
+                if (error) {
+                    throw error;
+                }
+                
+                // Success!
+                isSupabaseConnected = true;
+                updateStatus('online', 'CONNECTED');
+                updateDebug('✅ Connected to Supabase successfully!');
+                
+                // Check if user is already logged in
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    enterApp(user);
+                }
+                
+            } catch (err) {
+                updateDebug('❌ Supabase connection failed: ' + err.message);
+                console.error('Supabase error:', err);
+                enableLocalMode();
             }
-        } catch (err) {
-            logDebug('ERROR', 'Unexpected error:', err.message);
-            showError('Something went wrong: ' + err.message, 'register-error');
-            console.error('Full error:', err);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    }
-
-    // Resend confirmation email
-    async function resendConfirmation() {
-        if (!AppState.pendingEmail) {
-            showError('No pending registration found', 'register-error');
-            return;
         }
         
-        try {
-            const { error } = await supabaseClient.auth.resend({
-                type: 'signup',
-                email: AppState.pendingEmail
-            });
+        function enableLocalMode() {
+            isLocalMode = true;
+            updateStatus('local', 'LOCAL MODE');
+            document.getElementById('connection-banner').classList.remove('hidden');
+            document.getElementById('mode-badge').classList.remove('hidden');
+            updateDebug('Using local storage mode (no internet required)');
             
-            if (error) {
-                showError(error.message, 'register-error');
-            } else {
-                showToast('Confirmation email resent!', 'success');
-            }
-        } catch (err) {
-            showError('Failed to resend email', 'register-error');
-        }
-    }
-
-    // Toggle between login and register forms
-    function toggleAuthMode() {
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const title = document.getElementById('form-title');
-        const subtitle = document.getElementById('form-subtitle');
-        
-        // Clear errors and debug panel
-        document.getElementById('login-error').classList.add('hidden');
-        document.getElementById('register-error').classList.add('hidden');
-        document.getElementById('debug-panel').classList.add('hidden');
-        
-        if(loginForm.classList.contains('hidden')) {
-            // Switch to login
-            loginForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
-            if (title) title.textContent = 'Sign In';
-            if (subtitle) subtitle.textContent = 'Welcome back! Please enter your details.';
-        } else {
-            // Switch to register
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-            if (title) title.textContent = 'Create Account';
-            if (subtitle) subtitle.textContent = 'Join the anime streetwear community';
-        }
-    }
-
-    // Check if user is already logged in when page loads
-    async function checkUser() {
-        try {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                AppState.user = user;
-                document.getElementById('auth-modal').style.display = 'none';
-                document.getElementById('main-app').classList.remove('opacity-20', 'pointer-events-none');
-                document.getElementById('main-app').classList.add('opacity-100');
-            }
-        } catch (err) {
-            console.log('No active session');
-        }
-    }
-
-    // Password strength checker
-    function checkPasswordStrength(password) {
-        const bar = document.getElementById('strength-bar');
-        if (!bar) return;
-        
-        let strength = 0;
-        if (password.length > 5) strength++;
-        if (password.length > 8) strength++;
-        if (/[A-Z]/.test(password)) strength++;
-        if (/[0-9]/.test(password)) strength++;
-        if (/[^A-Za-z0-9]/.test(password)) strength++;
-        
-        const width = (strength / 5) * 100;
-        bar.style.width = width + '%';
-        
-        if (strength < 2) bar.className = 'h-full transition-all duration-300 bg-red-500';
-        else if (strength < 4) bar.className = 'h-full transition-all duration-300 bg-yellow-500';
-        else bar.className = 'h-full transition-all duration-300 bg-green-500';
-    }
-
-    // Run check when page loads
-    window.addEventListener('load', () => {
-        checkUser();
-        updateTime();
-        setInterval(updateTime, 1000);
-        setInterval(updateCountdown, 1000);
-        setInterval(simulateLatency, 5000);
-        setInterval(() => LiveDB.simulateActivity(), 8000);
-        renderProducts();
-        setInterval(updateDynamicPrices, 5000);
-        
-        // Check Supabase connection
-        if (supabaseClient) {
-            console.log('Supabase URL:', SUPABASE_URL);
-            console.log('To fix registration issues:');
-            console.log('1. Check Supabase Dashboard > Authentication > Users to see if user was created');
-            console.log('2. Check Authentication > Email Templates if emails are sending');
-            console.log('3. If using localhost, make sure Site URL is set to http://localhost in Auth settings');
-        }
-    });
-
-    // Product Rendering
-    function renderProducts() {
-        const grid = document.getElementById('product-grid');
-        if (!grid) return;
-        grid.innerHTML = '';
-        
-        let filtered = LiveDB.products;
-        if(AppState.currentFilter !== 'all') {
-            filtered = filtered.filter(p => p.category === AppState.currentFilter);
-        }
-        
-        filtered.forEach((product, idx) => {
-            const price = LiveDB.getDynamicPrice(product);
-            const card = createProductCard(product, price, idx);
-            grid.appendChild(card);
-        });
-    }
-
-    function createProductCard(product, price, idx) {
-        const div = document.createElement('div');
-        div.className = 'product-card rounded-2xl overflow-hidden border border-white/10 relative group';
-        div.style.animationDelay = `${idx * 100}ms`;
-        div.id = `product-${product.id}`;
-        
-        const stockClass = product.stock < 5 ? 'text-red-500 animate-pulse' : 'text-emerald-400';
-        const trendBadge = product.trending ? '<span class="absolute top-4 left-4 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 animate-pulse">🔥 TRENDING</span>' : '';
-        
-        div.innerHTML = `
-            ${trendBadge}
-            <div class="relative h-80 overflow-hidden bg-white/5">
-                <img src="${product.image}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${product.name}">
-                <div class="absolute top-4 right-4 bg-black/80 backdrop-blur px-3 py-1 rounded-full border border-white/20">
-                    <span class="text-xs font-mono ${stockClass}">${product.stock} LEFT</span>
-                </div>
-                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform">
-                    <div class="flex gap-2">
-                        <button onclick="quickAddToCart(${product.id})" class="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2 rounded-lg transition-colors">QUICK ADD</button>
-                    </div>
-                </div>
-            </div>
-            <div class="p-6">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <div class="text-xs text-gray-500 uppercase mb-1">${product.category}</div>
-                        <h3 class="font-bold text-lg leading-tight group-hover:text-cyan-400 transition-colors">${product.name}</h3>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-black fontDisplay text-white price-tag" data-id="${product.id}">$${price}</div>
-                        <div class="text-xs text-gray-500">${product.views} views</div>
-                    </div>
-                </div>
-                <div class="w-full bg-white/10 h-1 rounded-full mt-4 overflow-hidden">
-                    <div class="bg-gradient-to-r from-cyan-400 to-pink-500 h-full transition-all duration-1000" style="width: ${product.demand}%"></div>
-                </div>
-            </div>
-        `;
-        return div;
-    }
-
-    function updateDynamicPrices() {
-        LiveDB.products.forEach(product => {
-            const newPrice = LiveDB.getDynamicPrice(product);
-            const el = document.querySelector(`.price-tag[data-id="${product.id}"]`);
-            if(el) {
-                el.textContent = `$${newPrice}`;
-                el.classList.add('price-flash');
-                setTimeout(() => el.classList.remove('price-flash'), 500);
-            }
-        });
-        const heroPrice = LiveDB.getDynamicPrice(LiveDB.products[0]);
-        const heroEl = document.getElementById('hero-price');
-        if (heroEl) heroEl.textContent = `$${heroPrice}`;
-    }
-
-    function quickAddToCart(productId) {
-        const product = LiveDB.products.find(p => p.id === productId);
-        if (!product) return;
-        const currentPrice = parseFloat(LiveDB.getDynamicPrice(product));
-        
-        const existing = AppState.cart.find(item => item.id === productId);
-        if(existing) {
-            existing.quantity++;
-            existing.price = currentPrice;
-        } else {
-            AppState.cart.push({...product, quantity: 1, price: currentPrice});
-        }
-        updateCartUI();
-        showToast(`${product.name} added to cart`, 'success');
-    }
-
-    function updateCartUI() {
-        const count = AppState.cart.reduce((sum, item) => sum + item.quantity, 0);
-        const total = AppState.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        
-        const countEl = document.getElementById('cart-count');
-        const totalEl = document.getElementById('cart-total');
-        const container = document.getElementById('cart-items');
-        
-        if (countEl) {
-            countEl.textContent = count;
-            countEl.classList.toggle('scale-0', count === 0);
-        }
-        if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
-        
-        if(container) {
-            if(count === 0) {
-                container.innerHTML = '<div class="text-center text-gray-500 mt-8">Your cart is empty</div>';
-            } else {
-                container.innerHTML = AppState.cart.map((item, idx) => `
-                    <div class="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                        <img src="${item.image}" class="w-16 h-16 object-cover rounded-lg">
-                        <div class="flex-1">
-                            <h4 class="font-bold text-sm">${item.name}</h4>
-                            <div class="text-xs text-cyan-400 mt-1">$${item.price.toFixed(2)} each</div>
-                            <div class="flex items-center gap-3 mt-2">
-                                <button onclick="updateQuantity(${idx}, -1)" class="w-6 h-6 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center">-</button>
-                                <span class="font-mono">${item.quantity}</span>
-                                <button onclick="updateQuantity(${idx}, 1)" class="w-6 h-6 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center">+</button>
-                                <button onclick="removeFromCart(${idx})" class="ml-auto text-red-400 text-xs hover:underline">Remove</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+            // Check for existing local session
+            const localUser = localStorage.getItem('tokyo_street_user');
+            if (localUser) {
+                enterApp(JSON.parse(localUser));
             }
         }
-    }
-
-    function updateQuantity(idx, delta) {
-        AppState.cart[idx].quantity += delta;
-        if(AppState.cart[idx].quantity <= 0) {
-            AppState.cart.splice(idx, 1);
+        
+        function updateStatus(status, text) {
+            const dot = document.getElementById('status-dot');
+            const label = document.getElementById('auth-status');
+            
+            dot.className = 'status-dot status-' + status;
+            label.textContent = text;
+            label.className = status === 'online' ? 'text-emerald-400' : 
+                             status === 'local' ? 'text-yellow-400' : 'text-red-400';
         }
-        updateCartUI();
-    }
-
-    function removeFromCart(idx) {
-        AppState.cart.splice(idx, 1);
-        updateCartUI();
-    }
-
-    function dynamicCheckout() {
-        if(AppState.cart.length === 0) return;
-        const total = AppState.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        showToast('Processing payment...', 'info');
-        setTimeout(() => {
-            showToast(`Payment complete! $${total.toFixed(2)}`, 'success');
-            AppState.cart = [];
-            updateCartUI();
-            toggleCart();
-        }, 2000);
-    }
-
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        const colors = {
-            success: 'border-emerald-500 text-emerald-400',
-            error: 'border-red-500 text-red-400',
-            info: 'border-cyan-500 text-cyan-400'
-        };
-        toast.className = `toast pointer-events-auto bg-black/90 backdrop-blur-xl border-l-4 ${colors[type]} p-4 rounded-lg shadow-2xl flex items-center gap-3`;
-        toast.innerHTML = `<span class="text-lg">${type === 'success' ? '✓' : type === 'error' ? '!' : 'ℹ'}</span><span class="text-sm font-medium text-white">${message}</span>`;
-        container.appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 100);
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 400);
-        }, 3000);
-    }
-
-    function updateTime() {
-        const now = new Date();
-        const el = document.getElementById('server-time');
-        if (el) el.textContent = now.toISOString().split('T')[1].split('.')[0] + ' UTC';
-    }
-
-    function updateCountdown() {
-        const now = new Date();
-        const endOfDay = new Date(now);
-        endOfDay.setHours(23, 59, 59, 999);
-        const diff = endOfDay - now;
-        const hours = Math.floor(diff / 3600000);
-        const mins = Math.floor((diff % 3600000) / 60000);
-        const secs = Math.floor((diff % 60000) / 1000);
-        const el = document.getElementById('flash-countdown');
-        if (el) el.textContent = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
-
-    function simulateLatency() {
-        const el = document.getElementById('latency');
-        if (el) el.textContent = (Math.floor(Math.random() * 20) + 8) + 'ms';
-    }
-
-    function filterCategory(cat) {
-        AppState.currentFilter = cat;
-        document.querySelectorAll('.category-pill').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.cat === cat);
-        });
-        renderProducts();
-    }
-
-    function toggleCart() {
-        document.getElementById('cart-sidebar').classList.toggle('open');
-        document.getElementById('cart-overlay').classList.toggle('opacity-0');
-        document.getElementById('cart-overlay').classList.toggle('pointer-events-none');
-    }
-
-    function scrollToCollection() {
-        document.getElementById('collection').scrollIntoView({behavior: 'smooth'});
-    }
-
-    function logout() {
-        supabaseClient.auth.signOut().then(() => {
+        
+        function updateDebug(msg) {
+            console.log(msg);
+            const debugBox = document.getElementById('debug-info');
+            if (debugBox) {
+                debugBox.classList.remove('hidden');
+                debugBox.innerHTML += '<div>' + msg + '</div>';
+            }
+        }
+        
+        function retryConnection() {
             location.reload();
-        });
-    }
-
-    function toggleLiveChat() {
-        const chat = document.getElementById('live-chat');
-        if (chat) {
-            chat.classList.toggle('translate-y-[120%]');
         }
-    }
-
-    function handleChatKeypress(event) {
-        if (event.key === 'Enter') {
-            sendChatMessage();
-        }
-    }
-
-    function sendChatMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input.value.trim();
-        if (message) {
-            const container = document.getElementById('chat-messages');
-            const div = document.createElement('div');
-            div.className = 'chat-message bg-white/5 p-2 rounded text-xs';
-            div.innerHTML = `<span class="text-cyan-400 font-bold">You:</span> ${message}`;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-            input.value = '';
-            
-            // Simulate response
-            setTimeout(() => {
-                const response = document.createElement('div');
-                response.className = 'chat-message bg-white/5 p-2 rounded text-xs';
-                response.innerHTML = `<span class="text-pink-400 font-bold">System:</span> Message received.`;
-                container.appendChild(response);
-                container.scrollTop = container.scrollHeight;
-            }, 1000);
-        }
-    }
-
-    function toggleLiveFeed() {
-        showToast('Live feed feature coming soon!', 'info');
-    }
-
-    function sortProducts(sortType) {
-        showToast(`Sorting by ${sortType}...`, 'info');
-        // Implement actual sorting logic here
-    }
-
-    function debouncedSearch(query) {
-        if (!query) {
-            document.getElementById('search-results').classList.add('hidden');
-            return;
-        }
-        // Simple search implementation
-        const results = LiveDB.products.filter(p => 
-            p.name.toLowerCase().includes(query.toLowerCase()) ||
-            p.category.toLowerCase().includes(query.toLowerCase())
-        );
         
-        const container = document.getElementById('search-results');
-        if (results.length > 0) {
-            container.innerHTML = results.map(p => `
-                <div class="p-3 hover:bg-white/10 cursor-pointer flex items-center gap-3" onclick="quickAddToCart(${p.id})">
-                    <img src="${p.image}" class="w-10 h-10 rounded object-cover">
-                    <div>
-                        <div class="text-sm font-bold">${p.name}</div>
-                        <div class="text-xs text-cyan-400">$${LiveDB.getDynamicPrice(p)}</div>
-                    </div>
-                </div>
-            `).join('');
-            container.classList.remove('hidden');
-        } else {
-            container.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">No results found</div>';
-            container.classList.remove('hidden');
+        // ==========================================
+        // AUTHENTICATION FUNCTIONS
+        // ==========================================
+        
+        async function handleRegister() {
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm').value;
+            const btn = document.getElementById('register-btn');
+            
+            // Clear previous messages
+            document.getElementById('register-error').classList.add('hidden');
+            document.getElementById('register-success').classList.add('hidden');
+            
+            // Validation
+            if (!username || !email || !password) {
+                showError('Please fill in all fields', 'register-error');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showError('Passwords do not match!', 'register-error');
+                return;
+            }
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters', 'register-error');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+            
+            try {
+                if (isLocalMode || !isSupabaseConnected) {
+                    // LOCAL MODE: Save to localStorage
+                    const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
+                    
+                    // Check if email exists
+                    if (users.find(u => u.email === email)) {
+                        throw new Error('Email already registered');
+                    }
+                    
+                    const newUser = {
+                        id: 'local_' + Date.now(),
+                        email: email,
+                        user_metadata: { username: username },
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    users.push({ ...newUser, password: password }); // In real app, never store plain text passwords!
+                    localStorage.setItem('tokyo_street_users', JSON.stringify(users));
+                    
+                    showSuccess('Account created locally! You can now log in.');
+                    showToast('Account created (Local Mode)', 'success');
+                    
+                } else {
+                    // SUPABASE MODE
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: { username: username },
+                            emailRedirectTo: window.location.href
+                        }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    if (data.user) {
+                        if (data.session) {
+                            // Email confirmation is disabled
+                            enterApp(data.user);
+                        } else {
+                            // Email confirmation required
+                            showSuccess('Account created! Check your email to confirm.');
+                            document.getElementById('success-message').textContent = 
+                                'Check your email (' + email + ') for confirmation link.';
+                        }
+                    }
+                }
+            } catch (err) {
+                showError(err.message, 'register-error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
         }
-    }
-
-    function updateStats() {
-        document.getElementById('stat-items').textContent = AppState.salesCount;
-        document.getElementById('stat-users').textContent = Math.floor(AppState.activeUsers * 0.8);
-        document.getElementById('stat-volume').textContent = '$' + Math.floor(AppState.volume);
-    }
+        
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            
+            document.getElementById('login-error').classList.add('hidden');
+            
+            if (!email || !password) {
+                showError('Please enter email and password', 'login-error');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+            
+            try {
+                if (isLocalMode || !isSupabaseConnected) {
+                    // LOCAL MODE
+                    const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
+                    const user = users.find(u => u.email === email && u.password === password);
+                    
+                    if (!user) {
+                        throw new Error('Invalid email or password');
+                    }
+                    
+                    // Save session
+                    const sessionUser = {
+                        id: user.id,
+                        email: user.email,
+                        user_metadata: user.user_metadata
+                    };
+                    localStorage.setItem('tokyo_street_user', JSON.stringify(sessionUser));
+                    
+                    enterApp(sessionUser);
+                    showToast('Welcome back, ' + user.user_metadata.username + '!', 'success');
+                    
+                } else {
+                    // SUPABASE MODE
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) throw error;
+                    
+                    if (data.user) {
+                        enterApp(data.user);
+                    }
+                }
+            } catch (err) {
+                showError(err.message, 'login-error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        }
+        
+        function handleLogout() {
+            if (isSupabaseConnected && supabaseClient) {
+                supabaseClient.auth.signOut();
+            }
+            localStorage.removeItem('tokyo_street_user');
+            location.reload();
+        }
+        
+        function enterApp(user) {
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('main-app').classList.remove('opacity-20', 'pointer-events-none');
+            document.getElementById('main-app').classList.add('opacity-100');
+            
+            const username = user.user_metadata?.username || user.email;
+            showToast('Welcome, ' + username + '!', 'success');
+        }
+        
+        function toggleAuthMode() {
+            document.getElementById('login-form').classList.toggle('hidden');
+            document.getElementById('register-form').classList.toggle('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('register-error').classList.add('hidden');
+            document.getElementById('register-success').classList.add('hidden');
+            
+            // Update title
+            const title = document.getElementById('form-title');
+            title.textContent = document.getElementById('login-form').classList.contains('hidden') ? 'Create Account' : 'Sign In';
+        }
+        
+        function showError(message, elementId) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+        
+        function showSuccess(message) {
+            const el = document.getElementById('register-success');
+            document.getElementById('success-message').textContent = message;
+            el.classList.remove('hidden');
+        }
+        
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'border-emerald-500',
+                error: 'border-red-500',
+                info: 'border-cyan-500'
+            };
+            toast.className = `toast pointer-events-auto bg-black/90 border-l-4 ${colors[type]} p-4 rounded shadow-2xl mb-2 text-white text-sm`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
