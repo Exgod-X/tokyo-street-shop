@@ -232,6 +232,8 @@
             background: rgba(0,243,255,0.05);
         }
     </style>
+    <!-- This loads the security guard from Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="antialiased">
 
@@ -699,6 +701,9 @@
     </aside>
 
     <script>
+        const SUPABASE_URL = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // Dynamic State Management
         const AppState = {
             user: null,
@@ -825,9 +830,24 @@
         }
 
         // Authentication Flow
-        function dynamicLogin() {
-            const username = document.getElementById('login-username').value;
-            if(!username) return;
+        async function dynamicLogin() {
+    const email = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+    
+    if (error) {
+        document.getElementById('login-error').classList.remove('hidden');
+        document.getElementById('login-error').textContent = error.message;
+    } else {
+        document.getElementById('auth-modal').style.display = 'none';
+        document.getElementById('main-app').classList.remove('opacity-20');
+        document.getElementById('main-app').classList.add('opacity-100');
+    }
+}
             
             // Simulate API call
             simulateNetworkRequest(() => {
@@ -841,12 +861,22 @@
             });
         }
 
-        function dynamicRegister() {
-            simulateNetworkRequest(() => {
-                showToast('Identity initialized successfully', 'success');
-                showLogin();
-            });
-        }
+        async function dynamicRegister() {
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password
+    });
+    
+    if (error) {
+        alert(error.message);
+    } else {
+        alert('Check your email to confirm your account!');
+        toggleAuthMode(); // Switch back to login view
+    }
+}
 
         function simulateNetworkRequest(callback) {
             const btn = event.target;
@@ -1243,3 +1273,4 @@
     </script>
 </body>
 </html>
+
