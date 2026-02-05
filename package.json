@@ -1,0 +1,11 @@
+{
+  "name": "tokyo-street-shop",
+  "version": "1.0.0",
+  "description": "Anime streetwear e-commerce store",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  }
+}
