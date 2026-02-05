@@ -998,6 +998,327 @@
             btn.innerHTML = '<span class="animate-pulse">Processing...</span>';
             
             try {
+                if (!stripe) {
+                    // Demo mode - simulate checkout
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    const total = getCartTotal();
+                    const order = createOrder(cart, total);
+                    clearCart();
+                    toggleCart();
+                    showOrderConfirmation(order);
+                    return;
+                }
+                
+                // Real Stripe checkout
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart.map(item => ({
+                            productId: item.productId,
+                            size: item.size,
+                            quantity: item.quantity
+                        })),
+                        userId: currentUser?.id || 'guest'
+                    })
+                });
+                
+                const { sessionId } = await response.json();
+                const { error } = await stripe.redirectToCheckout({ sessionId });
+                
+                if (error) throw error;
+                
+            } catch (err) {
+                console.error('Checkout error:', err);
+                showToast('Checkout failed. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    CHECKOUT
+                `;
+            }
+        }
+        
+        // ==========================================
+        // AUTH FUNCTIONS
+        // ==========================================
+        
+        async function handleRegister() {
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm').value;
+            const btn = document.getElementById('register-btn');
+            
+            document.getElementById('register-error').classList.add('hidden');
+            document.getElementById('register-success').classList.add('hidden');
+            
+            if (!username || !email || !password) {
+                showError('Please fill in all fields', 'register-error');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showError('Passwords do not match!', 'register-error');
+                return;
+            }
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters', 'register-error');
+                return;
+            }
+            
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Creating account...';
+            
+            try {
+                if (isLocalMode || !isSupabaseConnected) {
+                    const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
+                    
+                    if (users.find(u => u.email === email)) {
+                        throw new Error('Email already registered');
+                    }
+                    
+                    const newUser = {
+                        id: 'local_' + Date.now(),
+                        email: email,
+                        user_metadata: { username: username },
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    users.push({ ...newUser, password: password });
+                    localStorage.setItem('tokyo_street_users', JSON.stringify(users));
+                    
+                    document.getElementById('register-success').classList.remove('hidden');
+                    showToast('Account created!', 'success');
+                    
+                } else {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: { username: username }
+                        }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    if (data.user) {
+                        if (data.session) {
+                            currentUser = data.user;
+                            enterApp(data.user);
+                        } else {
+                            document.getElementById('register-success').classList.remove('hidden');
+                            showToast('Check your email to confirm!', 'success');
+                        }
+                    }
+                }
+            } catch (err) {
+                showError(err.message, 'register-error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+        
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const btn = document.getElementById('login-btn');
+            
+            document.getElementById('login-error').classList.add('hidden');
+            
+            if (!email || !password) {
+                showError('Please enter email and password', 'login-error');
+                return;
+            }
+            
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Logging in...';
+            
+            try {
+                if (isLocalMode || !isSupabaseConnected) {
+                    const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
+                    const user = users.find(u => u.email === email && u.password === password);
+                    
+                    if (!user) throw new Error('Invalid email or password');
+                    
+                    const sessionUser = {
+                        id: user.id,
+                        email: user.email,
+                        user_metadata: user.user_metadata
+                    };
+                    localStorage.setItem('tokyo_street_user', JSON.stringify(sessionUser));
+                    currentUser = sessionUser;
+                    enterApp(sessionUser);
+                    
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) throw error;
+                    if (data.user) {
+                        currentUser = data.user;
+                        enterApp(data.user);
+                    }
+                }
+            } catch (err) {
+                showError(err.message, 'login-error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+        
+        function handleLogout() {
+            if (isSupabaseConnected && supabaseClient) {
+                supabaseClient.auth.signOut();
+            }
+            localStorage.removeItem('tokyo_street_user');
+            currentUser = null;
+            location.reload();
+        }
+        
+        function enterApp(user) {
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('main-app').classList.remove('opacity-20', 'pointer-events-none');
+            document.getElementById('main-app').classList.add('opacity-100');
+            
+            const username = user.user_metadata?.username || user.email;
+            document.getElementById('user-display').textContent = username;
+            document.getElementById('user-display').classList.remove('hidden');
+            
+            // Show admin link if user is admin
+            if (isAdmin()) {
+                document.getElementById('admin-link').classList.remove('hidden');
+                document.getElementById('admin-link-mobile').classList.remove('hidden');
+            }
+            
+            showToast('Welcome back, ' + username + '!', 'success');
+        }
+        
+        function toggleAuthMode() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+            
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('register-error').classList.add('hidden');
+            document.getElementById('register-success').classList.add('hidden');
+            
+            if (loginForm.classList.contains('hidden')) {
+                title.textContent = 'Create Account';
+                subtitle.textContent = 'Join the anime streetwear community.';
+            } else {
+                title.textContent = 'Sign In';
+                subtitle.textContent = 'Welcome back! Please enter your details.';
+            }
+        }
+        
+        // ==========================================
+        // UI HELPERS
+        // ==========================================
+        
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+        
+        function showError(message, elementId) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
+        }
+        
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'border-emerald-500 text-emerald-400',
+                error: 'border-red-500 text-red-400',
+                info: 'border-cyan-500 text-cyan-400'
+            };
+            const icons = {
+                success: '✓',
+                error: '!',
+                info: 'ℹ'
+            };
+            toast.className = `toast pointer-events-auto bg-black/90 border-l-4 ${colors[type]} p-4 rounded shadow-2xl flex items-center gap-3`;
+            toast.innerHTML = `
+                <span class="text-lg">${icons[type]}</span>
+                <span class="text-sm text-white">${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+        
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeQuickView();
+                closeOrderConfirmation();
+                const cartSidebar = document.getElementById('cart-sidebar');
+                if (cartSidebar.classList.contains('open')) {
+                    toggleCart();
+                }
+            }
+        });
+    </script>
+</body>
+</html> 1})" 
+                                            class="qty-btn w-6 h-6 flex items-center justify-center rounded bg-white/10 text-sm"
+                                            ${item.quantity <= 1 ? 'disabled' : ''}>
+                                        −
+                                    </button>
+                                    <span class="w-6 text-center text-sm fontMono">${item.quantity}</span>
+                                    <button onclick="updateCartQuantity(${index}, ${item.quantity + 1})" 
+                                            class="qty-btn w-6 h-6 flex items-center justify-center rounded bg-white/10 text-sm">
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                subtotal.textContent = `$${total.toFixed(2)}`;
+            }
+        }
+        
+        function animateCartBadge() {
+            const badge = document.getElementById('cart-badge');
+            badge.classList.add('animate');
+            setTimeout(() => badge.classList.remove('animate'), 300);
+        }
+        
+        // ==========================================
+        // CHECKOUT
+        // ==========================================
+        
+        async function proceedToCheckout() {
+            if (cart.length === 0) {
+                showToast('Your cart is empty', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('checkout-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-pulse">Processing...</span>';
+            
+            try {
                 // If Stripe is not configured, show demo mode
                 if (!stripe) {
                     showToast('Demo Mode: Stripe not configured', 'info');
