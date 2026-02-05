@@ -494,7 +494,7 @@
         
         // STRIPE CONFIGURATION
         // Replace with your Stripe publishable key
-        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51SxS9vEvXdzvVm9XvsJ9ucARLlhvs9MfZ6w1ePcNZnZvFNDQoAitDHV9v4Jlwyh3TXmaFMVQ3n5N8YA8GnnlLUWn00p8IMjS9n';
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY';
         
         let supabaseClient = null;
         let stripe = null;
@@ -619,21 +619,35 @@
             initializeStripe();
         });
         
-        async function initializeAuth() {
-            if (typeof supabase === 'undefined') {
-                console.error('Supabase library not loaded');
+        async function initializeAuth(retryCount = 0) {
+            const MAX_RETRIES = 2;
+            
+            if (typeof supabase === 'undefined' || typeof supabase.createClient !== 'function') {
+                console.error('Supabase library not loaded properly');
                 enableLocalMode();
                 return;
             }
             
             try {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                // Create client if not already created
+                if (!supabaseClient) {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
+                
+                // Add a small delay to ensure Supabase is fully ready
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 const { data, error } = await supabaseClient.auth.getSession();
                 
                 if (error) throw error;
                 
                 isSupabaseConnected = true;
+                isLocalMode = false;
                 updateStatus('online', 'CONNECTED');
+                
+                // Hide offline banner if it was showing
+                document.getElementById('connection-banner').classList.add('hidden');
+                document.getElementById('mode-badge').classList.add('hidden');
                 
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (user) {
@@ -642,7 +656,16 @@
                 }
                 
             } catch (err) {
-                console.error('Connection failed:', err);
+                console.error('Connection attempt ' + (retryCount + 1) + ' failed:', err);
+                
+                // Retry if we haven't exceeded max retries
+                if (retryCount < MAX_RETRIES) {
+                    console.log('Retrying connection in 1 second...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return initializeAuth(retryCount + 1);
+                }
+                
+                console.error('All connection attempts failed, enabling local mode');
                 enableLocalMode();
             }
         }
