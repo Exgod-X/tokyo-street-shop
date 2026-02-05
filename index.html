@@ -3,33 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOKYO STREET | Live Dynamic Vault</title>
+    <title>TOKYO STREET | Anime Streetwear</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     
     <style>
-        body { font-family: 'Noto Sans JP', sans-serif; background-color: #0a0a0f; color: #fff; overflow-x: hidden; }
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            background-color: #0a0a0f; 
+            color: #fff; 
+            overflow-x: hidden; 
+        }
         .fontDisplay { font-family: 'Orbitron', monospace; }
-        .product-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: linear-gradient(135deg, rgba(21,21,32,0.9) 0%, rgba(21,21,32,0.6) 100%); backdrop-filter: blur(10px); }
-        .cart-sidebar { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .cart-sidebar.open { transform: translateX(0); }
+        .fontMono { font-family: 'JetBrains Mono', monospace; }
         
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        /* Product Card Styling */
+        .product-card { 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            background: linear-gradient(135deg, rgba(21,21,32,0.9) 0%, rgba(21,21,32,0.6) 100%); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .product-card:hover { 
+            transform: translateY(-8px) scale(1.02); 
+            border-color: rgba(236, 72, 153, 0.5);
+            box-shadow: 0 20px 40px rgba(236, 72, 153, 0.15);
+        }
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+        .product-image {
+            transition: transform 0.5s ease;
+        }
+        
+        /* Cart Sidebar */
+        .cart-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .cart-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .cart-sidebar { 
+            transform: translateX(100%); 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .cart-sidebar.open { 
+            transform: translateX(0); 
+        }
+        
+        /* Status indicators */
+        .status-dot { 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            display: inline-block; 
+            margin-right: 6px; 
+        }
         .status-online { background: #00ff41; box-shadow: 0 0 10px #00ff41; }
         .status-offline { background: #ff0033; }
         .status-local { background: #ffff00; }
         
-        .toast { transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-        .toast.show { transform: translateX(0); }
+        /* Toast notifications */
+        .toast { 
+            transform: translateX(120%); 
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+        }
+        .toast.show { 
+            transform: translateX(0); 
+        }
+        
+        /* Size selector */
+        .size-btn {
+            transition: all 0.2s ease;
+        }
+        .size-btn:hover:not(.selected):not(:disabled) {
+            border-color: rgba(236, 72, 153, 0.5);
+            background: rgba(236, 72, 153, 0.1);
+        }
+        .size-btn.selected {
+            border-color: #ec4899;
+            background: rgba(236, 72, 153, 0.3);
+            color: #fff;
+        }
+        .size-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        /* Quantity controls */
+        .qty-btn {
+            transition: all 0.2s ease;
+        }
+        .qty-btn:hover:not(:disabled) {
+            background: rgba(236, 72, 153, 0.3);
+        }
+        .qty-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        /* Cart badge animation */
+        @keyframes cartBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        .cart-badge.animate {
+            animation: cartBounce 0.3s ease;
+        }
+        
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #ec4899 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Product quick view modal */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.open .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(236, 72, 153, 0.5);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(236, 72, 153, 0.8);
+        }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- Local Mode Indicator (shows only when Supabase fails) -->
+    <!-- Local Mode Banner -->
     <div id="connection-banner" class="hidden fixed top-0 w-full z-[200] bg-yellow-600 text-black p-2 text-center text-sm font-bold">
-        ⚠️ OFFLINE MODE: Using local storage only
+        ⚠️ OFFLINE MODE: Cart saved locally only
         <button onclick="location.reload()" class="ml-2 bg-black text-yellow-400 px-3 py-1 rounded text-xs hover:bg-gray-800">Reconnect</button>
     </div>
 
@@ -41,21 +175,33 @@
                 <span id="auth-status" class="text-gray-400">CONNECTING...</span>
             </span>
         </div>
-        <div class="text-gray-500">TOKYO STREET SYSTEM</div>
+        <div class="text-gray-500 fontDisplay text-[10px] tracking-wider">TOKYO STREET SYSTEM v2.0</div>
     </div>
 
     <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-16 right-4 z-50 flex flex-col gap-2 w-80 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-16 right-4 z-[60] flex flex-col gap-2 w-80 pointer-events-none"></div>
 
-    <!-- Auth Modal -->
+    <!-- ==================== AUTH MODAL ==================== -->
     <div id="auth-modal" class="fixed inset-0 z-[100] flex overflow-hidden bg-gray-900">
         <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
+            <div class="absolute inset-0 opacity-20">
+                <div class="absolute top-20 left-20 w-72 h-72 bg-pink-500 rounded-full filter blur-3xl"></div>
+                <div class="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500 rounded-full filter blur-3xl"></div>
+            </div>
             <div class="relative z-10 flex flex-col justify-center px-16 text-white">
                 <h1 class="text-5xl font-bold mb-6">
                     Welcome to<br/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-cyan-400">Tokyo Street</span>
+                    <span class="gradient-text">Tokyo Street</span>
                 </h1>
-                <p class="text-gray-300 text-lg">Discover exclusive anime streetwear.</p>
+                <p class="text-gray-300 text-lg mb-8">Discover exclusive anime streetwear that defines your style.</p>
+                <div class="flex gap-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-pink-400">✓</span> Premium Quality
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-cyan-400">✓</span> Worldwide Shipping
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -157,45 +303,187 @@
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="main-app" class="opacity-20 pointer-events-none transition-all duration-1000 pt-16">
-        <nav class="fixed top-8 w-full z-40 bg-black/80 backdrop-blur-md border-b border-white/10 p-4">
-            <div class="flex justify-between items-center max-w-7xl mx-auto">
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="main-app" class="opacity-20 pointer-events-none transition-all duration-1000 pt-10">
+        
+        <!-- Navigation -->
+        <nav class="fixed top-8 w-full z-40 bg-black/80 backdrop-blur-md border-b border-white/10">
+            <div class="flex justify-between items-center max-w-7xl mx-auto px-4 py-3">
                 <div class="flex items-center gap-3">
-                    <div class="text-2xl font-black fontDisplay tracking-tighter">TOKYO STREET</div>
-                    <span id="mode-badge" class="hidden text-xs bg-yellow-600 text-black px-2 py-1 rounded font-bold">LOCAL MODE</span>
+                    <div class="text-xl md:text-2xl font-black fontDisplay tracking-tighter">TOKYO<span class="text-pink-500">STREET</span></div>
+                    <span id="mode-badge" class="hidden text-xs bg-yellow-600 text-black px-2 py-1 rounded font-bold">LOCAL</span>
                 </div>
+                
+                <div class="hidden md:flex items-center gap-8 text-sm">
+                    <a href="#products" class="text-gray-300 hover:text-white transition-colors">Shop</a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors">New Arrivals</a>
+                    <a href="#" class="text-gray-300 hover:text-white transition-colors">Collections</a>
+                </div>
+                
                 <div class="flex items-center gap-4">
-                    <span id="user-display" class="text-sm text-gray-400 hidden"></span>
-                    <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 font-semibold text-sm">Logout</button>
+                    <span id="user-display" class="hidden text-sm text-gray-400 max-w-[100px] truncate"></span>
+                    
+                    <!-- Cart Button -->
+                    <button onclick="toggleCart()" class="relative p-2 hover:bg-white/10 rounded-lg transition-colors group">
+                        <svg class="w-6 h-6 text-gray-300 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <span id="cart-badge" class="cart-badge absolute -top-1 -right-1 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
+                    </button>
+                    
+                    <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 font-semibold text-sm hidden md:block">Logout</button>
+                    
+                    <!-- Mobile menu button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden p-2 hover:bg-white/10 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden border-t border-white/10 bg-black/95">
+                <div class="px-4 py-3 space-y-3">
+                    <a href="#products" class="block text-gray-300 hover:text-white py-2">Shop All</a>
+                    <a href="#" class="block text-gray-300 hover:text-white py-2">New Arrivals</a>
+                    <a href="#" class="block text-gray-300 hover:text-white py-2">Collections</a>
+                    <button onclick="handleLogout()" class="w-full text-left text-red-400 hover:text-red-300 py-2 border-t border-white/10 mt-3 pt-3">Logout</button>
                 </div>
             </div>
         </nav>
+
+        <!-- Hero Section -->
+        <section class="pt-32 pb-16 px-4 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-30">
+                <div class="absolute top-0 left-1/4 w-96 h-96 bg-pink-600 rounded-full filter blur-[128px]"></div>
+                <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-600 rounded-full filter blur-[128px]"></div>
+            </div>
+            <div class="relative z-10 max-w-4xl mx-auto text-center">
+                <div class="fontMono text-xs text-pink-400 tracking-widest mb-4">[ NEW COLLECTION 2025 ]</div>
+                <h1 class="text-4xl md:text-6xl font-black fontDisplay mb-6 leading-tight">
+                    ANIME STREETWEAR<br/>
+                    <span class="gradient-text">REDEFINED</span>
+                </h1>
+                <p class="text-gray-400 text-lg mb-8 max-w-xl mx-auto">Premium quality apparel inspired by your favorite anime. Express your passion with style.</p>
+                <a href="#products" class="inline-block bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold px-8 py-4 rounded-xl transition-all transform hover:scale-105">
+                    SHOP NOW
+                </a>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="py-16 px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl md:text-3xl font-bold fontDisplay">FEATURED <span class="text-pink-500">DROPS</span></h2>
+                    <div class="flex gap-2">
+                        <button onclick="filterProducts('all')" class="filter-btn px-4 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20 transition-colors" data-filter="all">All</button>
+                        <button onclick="filterProducts('hoodie')" class="filter-btn px-4 py-2 text-sm rounded-lg hover:bg-white/10 transition-colors" data-filter="hoodie">Hoodies</button>
+                        <button onclick="filterProducts('tshirt')" class="filter-btn px-4 py-2 text-sm rounded-lg hover:bg-white/10 transition-colors" data-filter="tshirt">T-Shirts</button>
+                    </div>
+                </div>
+                
+                <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Products will be rendered here by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-16 px-4 border-t border-white/10">
+            <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h3 class="font-bold text-lg mb-2">Fast Shipping</h3>
+                    <p class="text-gray-400 text-sm">Worldwide delivery in 5-10 business days</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="text-4xl mb-4">💎</div>
+                    <h3 class="font-bold text-lg mb-2">Premium Quality</h3>
+                    <p class="text-gray-400 text-sm">High-quality materials that last</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="text-4xl mb-4">🔒</div>
+                    <h3 class="font-bold text-lg mb-2">Secure Checkout</h3>
+                    <p class="text-gray-400 text-sm">Protected by Stripe encryption</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 px-4 border-t border-white/10 bg-black/50">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="fontDisplay text-xl font-bold">TOKYO<span class="text-pink-500">STREET</span></div>
+                    <div class="flex gap-6 text-sm text-gray-400">
+                        <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                        <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                        <a href="#" class="hover:text-white transition-colors">Contact</a>
+                    </div>
+                </div>
+                <div class="text-center text-gray-500 text-sm mt-8">© 2025 Tokyo Street. All rights reserved.</div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ==================== CART SIDEBAR ==================== -->
+    <div id="cart-overlay" class="cart-overlay fixed inset-0 bg-black/60 z-[70]" onclick="toggleCart()"></div>
+    
+    <div id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-full max-w-md bg-gray-950 border-l border-white/10 z-[80] flex flex-col">
+        <!-- Cart Header -->
+        <div class="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 class="text-xl font-bold fontDisplay">YOUR CART</h2>
+            <button onclick="toggleCart()" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
         
-        <div class="pt-32 p-8 text-center min-h-screen">
-            <h1 class="text-4xl font-bold mb-4 fontDisplay">Welcome to the Store!</h1>
-            <p class="text-gray-400 mb-8">You are logged in successfully.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div class="p-6 bg-gray-900 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-colors">
-                    <div class="text-3xl mb-2">👕</div>
-                    <h3 class="font-bold mb-2">Anime Hoodies</h3>
-                    <p class="text-sm text-gray-400">Premium quality streetwear</p>
-                </div>
-                <div class="p-6 bg-gray-900 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-colors">
-                    <div class="text-3xl mb-2">⚡</div>
-                    <h3 class="font-bold mb-2">Fast Shipping</h3>
-                    <p class="text-sm text-gray-400">Worldwide delivery</p>
-                </div>
-                <div class="p-6 bg-gray-900 rounded-xl border border-white/10 hover:border-cyan-500/50 transition-colors">
-                    <div class="text-3xl mb-2">🔒</div>
-                    <h3 class="font-bold mb-2">Secure</h3>
-                    <p class="text-sm text-gray-400">Protected checkout</p>
-                </div>
+        <!-- Cart Items -->
+        <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <!-- Cart items will be rendered here -->
+        </div>
+        
+        <!-- Cart Empty State -->
+        <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <svg class="w-16 h-16 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <p class="text-gray-400 mb-4">Your cart is empty</p>
+            <button onclick="toggleCart()" class="text-pink-400 hover:text-pink-300 font-semibold">Continue Shopping</button>
+        </div>
+        
+        <!-- Cart Footer -->
+        <div id="cart-footer" class="hidden border-t border-white/10 p-4 space-y-4 bg-gray-900/50">
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-400">Subtotal</span>
+                <span id="cart-subtotal" class="font-bold text-lg">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>Shipping calculated at checkout</span>
+            </div>
+            <button onclick="proceedToCheckout()" id="checkout-btn" class="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                CHECKOUT
+            </button>
+            <p class="text-center text-xs text-gray-500">Secured by Stripe</p>
+        </div>
+    </div>
+
+    <!-- ==================== PRODUCT QUICK VIEW MODAL ==================== -->
+    <div id="product-modal" class="modal-overlay fixed inset-0 bg-black/80 z-[90] flex items-center justify-center p-4">
+        <div class="modal-content bg-gray-950 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10">
+            <div id="modal-content-inner">
+                <!-- Modal content will be rendered here -->
             </div>
         </div>
     </div>
 
+    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
         // ==========================================
         // CONFIGURATION
@@ -204,9 +492,121 @@
         const SUPABASE_URL = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
         
+        // STRIPE CONFIGURATION
+        // Replace with your Stripe publishable key
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY';
+        
         let supabaseClient = null;
+        let stripe = null;
         let isSupabaseConnected = false;
         let isLocalMode = false;
+        let currentUser = null;
+        
+        // ==========================================
+        // PRODUCT DATA
+        // ==========================================
+        
+        const PRODUCTS = [
+            {
+                id: 'prod_001',
+                name: 'Akatsuki Cloud Hoodie',
+                price: 79.99,
+                category: 'hoodie',
+                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=500&fit=crop',
+                description: 'Premium heavyweight hoodie featuring the iconic Akatsuki cloud pattern. Made from 100% organic cotton.',
+                sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+                stock: { S: 5, M: 10, L: 8, XL: 3, XXL: 2 }
+            },
+            {
+                id: 'prod_002',
+                name: 'Demon Slayer Corps Tee',
+                price: 39.99,
+                category: 'tshirt',
+                image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=500&fit=crop',
+                description: 'Classic fit t-shirt with Demon Slayer Corps emblem. Soft breathable fabric for all-day comfort.',
+                sizes: ['S', 'M', 'L', 'XL'],
+                stock: { S: 12, M: 15, L: 10, XL: 8 }
+            },
+            {
+                id: 'prod_003',
+                name: 'Jujutsu Kaisen Oversized Hoodie',
+                price: 89.99,
+                category: 'hoodie',
+                image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=500&fit=crop',
+                description: 'Oversized streetwear hoodie with cursed energy graphics. Features kangaroo pocket and ribbed cuffs.',
+                sizes: ['M', 'L', 'XL', 'XXL'],
+                stock: { M: 6, L: 4, XL: 7, XXL: 5 }
+            },
+            {
+                id: 'prod_004',
+                name: 'Attack on Titan Survey Corps Tee',
+                price: 44.99,
+                category: 'tshirt',
+                image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop',
+                description: 'Premium cotton tee with Survey Corps wings emblem. Perfect for dedicated scouts.',
+                sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+                stock: { S: 8, M: 12, L: 15, XL: 10, XXL: 6 }
+            },
+            {
+                id: 'prod_005',
+                name: 'One Piece Straw Hat Hoodie',
+                price: 74.99,
+                category: 'hoodie',
+                image: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400&h=500&fit=crop',
+                description: 'Sail the Grand Line in style with this Straw Hat crew hoodie. Features embroidered Jolly Roger.',
+                sizes: ['S', 'M', 'L', 'XL'],
+                stock: { S: 4, M: 9, L: 11, XL: 7 }
+            },
+            {
+                id: 'prod_006',
+                name: 'Chainsaw Man Power Tee',
+                price: 42.99,
+                category: 'tshirt',
+                image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=500&fit=crop',
+                description: 'Limited edition graphic tee featuring Blood Fiend artwork. Relaxed fit with dropped shoulders.',
+                sizes: ['S', 'M', 'L', 'XL'],
+                stock: { S: 3, M: 7, L: 5, XL: 4 }
+            },
+            {
+                id: 'prod_007',
+                name: 'Spy x Family Zip Hoodie',
+                price: 84.99,
+                category: 'hoodie',
+                image: 'https://images.unsplash.com/photo-1614495039153-e9cd13240469?w=400&h=500&fit=crop',
+                description: 'Full-zip hoodie with Forger family crest. Premium fleece lining for ultimate comfort.',
+                sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+                stock: { S: 6, M: 8, L: 10, XL: 5, XXL: 3 }
+            },
+            {
+                id: 'prod_008',
+                name: 'My Hero Academia Plus Ultra Tee',
+                price: 38.99,
+                category: 'tshirt',
+                image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=500&fit=crop',
+                description: 'Go beyond with this UA High School training tee. Moisture-wicking fabric for hero training.',
+                sizes: ['S', 'M', 'L', 'XL'],
+                stock: { S: 10, M: 14, L: 12, XL: 9 }
+            }
+        ];
+        
+        // ==========================================
+        // CART STATE
+        // ==========================================
+        
+        let cart = [];
+        
+        function loadCart() {
+            const savedCart = localStorage.getItem('tokyo_street_cart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+            }
+            updateCartUI();
+        }
+        
+        function saveCart() {
+            localStorage.setItem('tokyo_street_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
         
         // ==========================================
         // INITIALIZATION
@@ -214,6 +614,9 @@
         
         window.addEventListener('load', async function() {
             await initializeAuth();
+            loadCart();
+            renderProducts();
+            initializeStripe();
         });
         
         async function initializeAuth() {
@@ -233,11 +636,20 @@
                 updateStatus('online', 'CONNECTED');
                 
                 const { data: { user } } = await supabaseClient.auth.getUser();
-                if (user) enterApp(user);
+                if (user) {
+                    currentUser = user;
+                    enterApp(user);
+                }
                 
             } catch (err) {
                 console.error('Connection failed:', err);
                 enableLocalMode();
+            }
+        }
+        
+        function initializeStripe() {
+            if (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY !== 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY') {
+                stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
             }
         }
         
@@ -248,7 +660,10 @@
             document.getElementById('mode-badge').classList.remove('hidden');
             
             const localUser = localStorage.getItem('tokyo_street_user');
-            if (localUser) enterApp(JSON.parse(localUser));
+            if (localUser) {
+                currentUser = JSON.parse(localUser);
+                enterApp(currentUser);
+            }
         }
         
         function updateStatus(status, text) {
@@ -262,7 +677,437 @@
         }
         
         // ==========================================
-        // AUTHENTICATION FUNCTIONS
+        // PRODUCT RENDERING
+        // ==========================================
+        
+        function renderProducts(filter = 'all') {
+            const grid = document.getElementById('products-grid');
+            const filteredProducts = filter === 'all' 
+                ? PRODUCTS 
+                : PRODUCTS.filter(p => p.category === filter);
+            
+            grid.innerHTML = filteredProducts.map(product => `
+                <div class="product-card rounded-xl overflow-hidden" data-category="${product.category}">
+                    <div class="relative overflow-hidden aspect-[4/5] bg-gray-900">
+                        <img src="${product.image}" alt="${product.name}" 
+                             class="product-image w-full h-full object-cover" 
+                             loading="lazy">
+                        <button onclick="openQuickView('${product.id}')" 
+                                class="absolute bottom-4 left-4 right-4 py-2 bg-black/80 hover:bg-black text-white text-sm font-semibold rounded-lg opacity-0 translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0"
+                                style="opacity: 0;">
+                            Quick View
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-sm leading-tight">${product.name}</h3>
+                            <span class="text-pink-400 font-bold fontMono">$${product.price.toFixed(2)}</span>
+                        </div>
+                        <p class="text-gray-500 text-xs mb-3">${product.category.toUpperCase()}</p>
+                        <button onclick="openQuickView('${product.id}')" 
+                                class="w-full py-2 bg-white/10 hover:bg-pink-600 text-sm font-semibold rounded-lg transition-all duration-300">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add hover effect to show quick view button
+            document.querySelectorAll('.product-card').forEach(card => {
+                const btn = card.querySelector('button');
+                card.addEventListener('mouseenter', () => {
+                    btn.style.opacity = '1';
+                    btn.style.transform = 'translateY(0)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    btn.style.opacity = '0';
+                    btn.style.transform = 'translateY(1rem)';
+                });
+            });
+        }
+        
+        function filterProducts(filter) {
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('bg-white/10');
+                } else {
+                    btn.classList.remove('bg-white/10');
+                }
+            });
+            renderProducts(filter);
+        }
+        
+        // ==========================================
+        // QUICK VIEW MODAL
+        // ==========================================
+        
+        function openQuickView(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+            
+            const modal = document.getElementById('product-modal');
+            const content = document.getElementById('modal-content-inner');
+            
+            content.innerHTML = `
+                <div class="relative">
+                    <button onclick="closeQuickView()" class="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black rounded-full transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="aspect-square bg-gray-900 rounded-xl overflow-hidden">
+                            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-6 flex flex-col">
+                            <div class="text-xs text-pink-400 fontMono mb-2">${product.category.toUpperCase()}</div>
+                            <h2 class="text-2xl font-bold mb-2">${product.name}</h2>
+                            <p class="text-3xl font-bold text-pink-400 fontMono mb-4">$${product.price.toFixed(2)}</p>
+                            <p class="text-gray-400 text-sm mb-6">${product.description}</p>
+                            
+                            <div class="mb-6">
+                                <label class="text-sm text-gray-300 mb-2 block">Select Size</label>
+                                <div class="flex flex-wrap gap-2" id="size-selector">
+                                    ${product.sizes.map(size => `
+                                        <button onclick="selectSize('${size}')" 
+                                                class="size-btn px-4 py-2 border border-white/20 rounded-lg text-sm font-semibold ${product.stock[size] === 0 ? 'opacity-30 cursor-not-allowed' : ''}"
+                                                data-size="${size}"
+                                                ${product.stock[size] === 0 ? 'disabled' : ''}>
+                                            ${size}
+                                            ${product.stock[size] <= 3 && product.stock[size] > 0 ? '<span class="text-xs text-yellow-400 ml-1">Low</span>' : ''}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                                <p id="size-error" class="hidden text-red-400 text-xs mt-2">Please select a size</p>
+                            </div>
+                            
+                            <div class="mt-auto space-y-3">
+                                <button onclick="addToCartFromModal('${product.id}')" 
+                                        class="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02]">
+                                    ADD TO CART
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeQuickView() {
+            const modal = document.getElementById('product-modal');
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+        
+        let selectedSize = null;
+        
+        function selectSize(size) {
+            selectedSize = size;
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.size === size);
+            });
+            document.getElementById('size-error').classList.add('hidden');
+        }
+        
+        function addToCartFromModal(productId) {
+            if (!selectedSize) {
+                document.getElementById('size-error').classList.remove('hidden');
+                return;
+            }
+            
+            addToCart(productId, selectedSize);
+            selectedSize = null;
+            closeQuickView();
+        }
+        
+        // ==========================================
+        // CART FUNCTIONS
+        // ==========================================
+        
+        function addToCart(productId, size, quantity = 1) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+            
+            // Check if item already exists in cart
+            const existingIndex = cart.findIndex(item => 
+                item.productId === productId && item.size === size
+            );
+            
+            if (existingIndex > -1) {
+                // Check stock
+                if (cart[existingIndex].quantity + quantity > product.stock[size]) {
+                    showToast('Not enough stock available', 'error');
+                    return;
+                }
+                cart[existingIndex].quantity += quantity;
+            } else {
+                cart.push({
+                    productId,
+                    size,
+                    quantity,
+                    price: product.price
+                });
+            }
+            
+            saveCart();
+            showToast(`${product.name} (${size}) added to cart!`, 'success');
+            animateCartBadge();
+        }
+        
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            showToast('Item removed from cart', 'info');
+        }
+        
+        function updateCartQuantity(index, newQuantity) {
+            if (newQuantity < 1) {
+                removeFromCart(index);
+                return;
+            }
+            
+            const item = cart[index];
+            const product = PRODUCTS.find(p => p.id === item.productId);
+            
+            if (newQuantity > product.stock[item.size]) {
+                showToast('Not enough stock available', 'error');
+                return;
+            }
+            
+            cart[index].quantity = newQuantity;
+            saveCart();
+        }
+        
+        function clearCart() {
+            cart = [];
+            saveCart();
+        }
+        
+        function getCartTotal() {
+            return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        }
+        
+        function getCartCount() {
+            return cart.reduce((count, item) => count + item.quantity, 0);
+        }
+        
+        // ==========================================
+        // CART UI
+        // ==========================================
+        
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+        
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const itemsContainer = document.getElementById('cart-items');
+            const emptyState = document.getElementById('cart-empty');
+            const footer = document.getElementById('cart-footer');
+            const subtotal = document.getElementById('cart-subtotal');
+            
+            const count = getCartCount();
+            const total = getCartTotal();
+            
+            // Update badge
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+            
+            // Update cart display
+            if (cart.length === 0) {
+                itemsContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                footer.classList.add('hidden');
+            } else {
+                itemsContainer.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                footer.classList.remove('hidden');
+                
+                itemsContainer.innerHTML = cart.map((item, index) => {
+                    const product = PRODUCTS.find(p => p.id === item.productId);
+                    if (!product) return '';
+                    
+                    return `
+                        <div class="flex gap-4 p-3 bg-white/5 rounded-xl">
+                            <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0">
+                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-semibold text-sm truncate">${product.name}</h4>
+                                <p class="text-gray-500 text-xs">Size: ${item.size}</p>
+                                <p class="text-pink-400 font-bold fontMono text-sm mt-1">$${item.price.toFixed(2)}</p>
+                            </div>
+                            <div class="flex flex-col items-end justify-between">
+                                <button onclick="removeFromCart(${index})" class="p-1 text-gray-500 hover:text-red-400 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="updateCartQuantity(${index}, ${item.quantity - 1})" 
+                                            class="qty-btn w-6 h-6 flex items-center justify-center rounded bg-white/10 text-sm"
+                                            ${item.quantity <= 1 ? 'disabled' : ''}>
+                                        −
+                                    </button>
+                                    <span class="w-6 text-center text-sm fontMono">${item.quantity}</span>
+                                    <button onclick="updateCartQuantity(${index}, ${item.quantity + 1})" 
+                                            class="qty-btn w-6 h-6 flex items-center justify-center rounded bg-white/10 text-sm">
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                subtotal.textContent = `$${total.toFixed(2)}`;
+            }
+        }
+        
+        function animateCartBadge() {
+            const badge = document.getElementById('cart-badge');
+            badge.classList.add('animate');
+            setTimeout(() => badge.classList.remove('animate'), 300);
+        }
+        
+        // ==========================================
+        // CHECKOUT
+        // ==========================================
+        
+        async function proceedToCheckout() {
+            if (cart.length === 0) {
+                showToast('Your cart is empty', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('checkout-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-pulse">Processing...</span>';
+            
+            try {
+                // If Stripe is not configured, show demo mode
+                if (!stripe) {
+                    showToast('Demo Mode: Stripe not configured', 'info');
+                    
+                    // Simulate checkout process
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Show success modal
+                    showCheckoutDemo();
+                    return;
+                }
+                
+                // Real Stripe checkout
+                // In production, you would call your backend to create a Checkout Session
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart.map(item => ({
+                            productId: item.productId,
+                            size: item.size,
+                            quantity: item.quantity
+                        })),
+                        userId: currentUser?.id || 'guest'
+                    })
+                });
+                
+                const { sessionId } = await response.json();
+                
+                // Redirect to Stripe Checkout
+                const { error } = await stripe.redirectToCheckout({ sessionId });
+                
+                if (error) {
+                    throw error;
+                }
+                
+            } catch (err) {
+                console.error('Checkout error:', err);
+                showToast('Checkout failed. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    CHECKOUT
+                `;
+            }
+        }
+        
+        function showCheckoutDemo() {
+            const total = getCartTotal();
+            const modal = document.getElementById('product-modal');
+            const content = document.getElementById('modal-content-inner');
+            
+            content.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Demo Checkout</h2>
+                    <p class="text-gray-400 mb-6">This is a demo. In production, this would redirect to Stripe Checkout.</p>
+                    
+                    <div class="bg-white/5 rounded-xl p-6 mb-6 text-left">
+                        <h3 class="font-semibold mb-4">Order Summary</h3>
+                        ${cart.map(item => {
+                            const product = PRODUCTS.find(p => p.id === item.productId);
+                            return `
+                                <div class="flex justify-between text-sm py-2 border-b border-white/10">
+                                    <span>${product.name} (${item.size}) × ${item.quantity}</span>
+                                    <span class="fontMono">$${(item.price * item.quantity).toFixed(2)}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                        <div class="flex justify-between font-bold mt-4 pt-2">
+                            <span>Total</span>
+                            <span class="text-pink-400 fontMono">$${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button onclick="completeDemo()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all">
+                            Complete Demo Order
+                        </button>
+                        <button onclick="closeQuickView()" class="w-full py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+                            Continue Shopping
+                        </button>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 mt-6">
+                        To enable real payments, add your Stripe publishable key.
+                    </p>
+                </div>
+            `;
+            
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function completeDemo() {
+            clearCart();
+            toggleCart();
+            closeQuickView();
+            showToast('Demo order completed! Thank you!', 'success');
+        }
+        
+        // ==========================================
+        // AUTH FUNCTIONS
         // ==========================================
         
         async function handleRegister() {
@@ -294,7 +1139,6 @@
             
             try {
                 if (isLocalMode || !isSupabaseConnected) {
-                    // Local Storage Mode
                     const users = JSON.parse(localStorage.getItem('tokyo_street_users') || '[]');
                     
                     if (users.find(u => u.email === email)) {
@@ -315,7 +1159,6 @@
                     showToast('Account created!', 'success');
                     
                 } else {
-                    // Supabase Mode
                     const { data, error } = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
@@ -328,6 +1171,7 @@
                     
                     if (data.user) {
                         if (data.session) {
+                            currentUser = data.user;
                             enterApp(data.user);
                         } else {
                             document.getElementById('register-success').classList.remove('hidden');
@@ -372,7 +1216,7 @@
                         user_metadata: user.user_metadata
                     };
                     localStorage.setItem('tokyo_street_user', JSON.stringify(sessionUser));
-                    
+                    currentUser = sessionUser;
                     enterApp(sessionUser);
                     
                 } else {
@@ -382,7 +1226,10 @@
                     });
                     
                     if (error) throw error;
-                    if (data.user) enterApp(data.user);
+                    if (data.user) {
+                        currentUser = data.user;
+                        enterApp(data.user);
+                    }
                 }
             } catch (err) {
                 showError(err.message, 'login-error');
@@ -397,6 +1244,7 @@
                 supabaseClient.auth.signOut();
             }
             localStorage.removeItem('tokyo_street_user');
+            currentUser = null;
             location.reload();
         }
         
@@ -406,7 +1254,7 @@
             document.getElementById('main-app').classList.add('opacity-100');
             
             const username = user.user_metadata?.username || user.email;
-            document.getElementById('user-display').textContent = 'Welcome, ' + username;
+            document.getElementById('user-display').textContent = username;
             document.getElementById('user-display').classList.remove('hidden');
             
             showToast('Welcome back, ' + username + '!', 'success');
@@ -433,6 +1281,14 @@
             }
         }
         
+        // ==========================================
+        // UI HELPERS
+        // ==========================================
+        
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+        
         function showError(message, elementId) {
             const el = document.getElementById(elementId);
             el.textContent = message;
@@ -448,8 +1304,16 @@
                 error: 'border-red-500 text-red-400',
                 info: 'border-cyan-500 text-cyan-400'
             };
-            toast.className = `toast pointer-events-auto bg-black/90 border-l-4 ${colors[type]} p-4 rounded shadow-2xl flex items-center gap-3 mb-2`;
-            toast.innerHTML = `<span class="text-lg">${type === 'success' ? '✓' : type === 'error' ? '!' : 'ℹ'}</span><span class="text-sm text-white">${message}</span>`;
+            const icons = {
+                success: '✓',
+                error: '!',
+                info: 'ℹ'
+            };
+            toast.className = `toast pointer-events-auto bg-black/90 border-l-4 ${colors[type]} p-4 rounded shadow-2xl flex items-center gap-3`;
+            toast.innerHTML = `
+                <span class="text-lg">${icons[type]}</span>
+                <span class="text-sm text-white">${message}</span>
+            `;
             container.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 100);
             setTimeout(() => {
@@ -457,6 +1321,17 @@
                 setTimeout(() => toast.remove(), 400);
             }, 3000);
         }
+        
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeQuickView();
+                const cartSidebar = document.getElementById('cart-sidebar');
+                if (cartSidebar.classList.contains('open')) {
+                    toggleCart();
+                }
+            }
+        });
     </script>
 </body>
 </html>
