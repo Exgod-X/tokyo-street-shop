@@ -1,15 +1,15 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-// Your product data (must match your frontend)
+// UPDATED PRODUCT DATA - Work Meme Apparel
 const PRODUCTS = {
-  'prod_001': { name: 'Akatsuki Cloud Hoodie', price: 7999 },      // Price in cents
-  'prod_002': { name: 'Demon Slayer Corps Tee', price: 3999 },
-  'prod_003': { name: 'Jujutsu Kaisen Oversized Hoodie', price: 8999 },
-  'prod_004': { name: 'Attack on Titan Survey Corps Tee', price: 4499 },
-  'prod_005': { name: 'One Piece Straw Hat Hoodie', price: 7499 },
-  'prod_006': { name: 'Chainsaw Man Power Tee', price: 4299 },
-  'prod_007': { name: 'Spy x Family Zip Hoodie', price: 8499 },
-  'prod_008': { name: 'My Hero Academia Plus Ultra Tee', price: 3899 }
+  'prod_001': { name: 'Meeting Could\'ve Been An Email Hoodie', price: 5499 },
+  'prod_002': { name: 'Professional Overthinker Tee', price: 3499 },
+  'prod_003': { name: 'Ctrl+Alt+Delete Monday Hoodie', price: 5999 },
+  'prod_004': { name: 'Deadline Survivor Tee', price: 3799 },
+  'prod_005': { name: 'Coffee Powered Hoodie', price: 5299 },
+  'prod_006': { name: 'Send Help (and Coffee) Tee', price: 3699 },
+  'prod_007': { name: 'Target Achieved* (*Barely) Hoodie', price: 5799 },
+  'prod_008': { name: 'Spreadsheet Wizard Tee', price: 3599 }
 };
 
 module.exports = async (req, res) => {
@@ -53,20 +53,19 @@ module.exports = async (req, res) => {
       mode: 'payment',
       success_url: `${req.headers.origin}/?success=true`,
       cancel_url: `${req.headers.origin}/?canceled=true`,
-      // Optional: Add shipping
+      // Shipping
       shipping_address_collection: {
-        allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'JP', 'SG', 'MY', 'PH'],
+        allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'JP', 'SG', 'MY', 'PH', 'IN', 'BR', 'MX'],
       },
-      // Optional: Add shipping options
       shipping_options: [
         {
           shipping_rate_data: {
             type: 'fixed_amount',
             fixed_amount: {
-              amount: 999,
+              amount: 0, // Free shipping
               currency: 'usd',
             },
-            display_name: 'Standard Shipping',
+            display_name: 'Free Standard Shipping',
             delivery_estimate: {
               minimum: {
                 unit: 'business_day',
@@ -83,7 +82,7 @@ module.exports = async (req, res) => {
           shipping_rate_data: {
             type: 'fixed_amount',
             fixed_amount: {
-              amount: 1999,
+              amount: 1499, // $14.99
               currency: 'usd',
             },
             display_name: 'Express Shipping',
