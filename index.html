@@ -3,1368 +3,1315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CORPORATE SURVIVAL | Work Meme Apparel</title>
+    <title>LUXA — Wear the World</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://js.stripe.com/v3/"></script>
-    
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --cream:    #FAF8F4;
+            --warm:     #F2EDE6;
+            --charcoal: #1C1C1E;
+            --mid:      #6B6560;
+            --gold:     #B8955A;
+            --gold-lt:  #D4B483;
+            --terra:    #C07B5E;
+            --border:   #E5DDD5;
         }
-        
-        body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: #ffffff; 
-            color: #111; 
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--charcoal);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
-        
-        .nike-display { 
-            font-family: 'Bebas Neue', 'Impact', sans-serif; 
+
+        .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--warm); }
+        ::-webkit-scrollbar-thumb { background: var(--gold-lt); border-radius: 3px; }
+
+        /* ── ANNOUNCEMENT BAR ── */
+        .announce-bar {
+            background: var(--charcoal);
+            color: #fff;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-align: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+        .announce-scroll {
+            display: inline-block;
+            animation: marquee 28s linear infinite;
+            white-space: nowrap;
+        }
+        @keyframes marquee {
+            from { transform: translateX(100vw); }
+            to   { transform: translateX(-100%); }
+        }
+
+        /* ── NAV ── */
+        .nav {
+            position: fixed;
+            top: 34px;
+            width: 100%;
+            z-index: 50;
+            background: rgba(250,248,244,0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            transition: top 0.3s ease, box-shadow 0.3s;
+        }
+        .nav.scrolled { top: 0; box-shadow: 0 2px 24px rgba(0,0,0,0.06); }
+        .nav-link {
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            color: var(--mid);
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-link:hover { color: var(--charcoal); }
+
+        /* ── BUTTONS ── */
+        .btn-dark {
+            background: var(--charcoal);
+            color: #fff;
+            border: 1.5px solid var(--charcoal);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 14px 32px;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn-dark:hover { background: #3a3a3a; }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--charcoal);
+            border: 1.5px solid var(--charcoal);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 14px 32px;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn-outline:hover { background: var(--charcoal); color: #fff; }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #fff;
+            border: 1.5px solid var(--gold);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 16px 40px;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn-gold:hover { background: #a0803f; }
+
+        /* ── HERO ── */
+        .hero {
+            height: 100vh;
+            min-height: 700px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+        }
+        .hero-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 115%;
+            object-fit: cover;
+            transform: translateY(0);
+            transition: transform 0.1s linear;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(28,28,30,0.75) 0%,
+                rgba(28,28,30,0.2) 55%,
+                transparent 100%
+            );
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            padding: 0 6% 8%;
+            max-width: 760px;
+        }
+        .hero-label {
+            font-size: 11px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--gold-lt);
+            font-weight: 500;
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.2s ease forwards;
+        }
+        .hero-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(68px, 10vw, 130px);
+            font-weight: 300;
+            line-height: 0.88;
+            color: #fff;
+            margin-bottom: 28px;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.4s ease forwards;
+            letter-spacing: -0.01em;
+        }
+        .hero-title em { font-style: italic; color: var(--gold-lt); }
+        .hero-sub {
+            font-size: 16px;
+            color: rgba(255,255,255,0.75);
+            font-weight: 300;
+            max-width: 420px;
+            line-height: 1.7;
+            margin-bottom: 36px;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.6s ease forwards;
+        }
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeUp 0.9s 0.75s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── POD BANNER ── */
+        .pod-banner {
+            background: var(--warm);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .pod-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 28px 0;
+        }
+        .pod-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--charcoal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        /* ── SECTION TITLES ── */
+        .section-eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(42px, 5vw, 72px);
+            font-weight: 300;
+            line-height: 1.0;
+            letter-spacing: -0.01em;
+        }
+        .section-title em { font-style: italic; }
+
+        /* ── CATEGORY GRID ── */
+        .cat-card {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--warm);
+        }
+        .cat-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s cubic-bezier(0.4,0,0.2,1);
+        }
+        .cat-card:hover img { transform: scale(1.07); }
+        .cat-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(28,28,30,0.65) 0%, transparent 55%);
+            transition: opacity 0.3s;
+        }
+        .cat-label {
+            position: absolute;
+            bottom: 28px;
+            left: 28px;
+            right: 28px;
+        }
+        .cat-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 34px;
+            font-weight: 400;
+            color: #fff;
             letter-spacing: 0.02em;
+            line-height: 1.1;
         }
-        
-        /* Hero Image Parallax */
-        .hero-parallax {
-            transition: transform 0.1s ease-out;
+        .cat-sub {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-top: 4px;
         }
-        
-        /* Product Card Styling */
-        .product-card { 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #ffffff;
+
+        /* ── PRODUCT CARDS ── */
+        .prod-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .product-card:hover { 
-            transform: translateY(-4px);
+        .prod-card:hover { transform: translateY(-3px); }
+        .prod-img-wrap {
+            overflow: hidden;
+            background: var(--warm);
+            aspect-ratio: 3/4;
+            position: relative;
         }
-        .product-card:hover .product-image {
-            transform: scale(1.08);
+        .prod-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
         }
-        .product-image {
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        .prod-card:hover .prod-img-wrap img { transform: scale(1.06); }
+        .prod-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: var(--charcoal);
+            color: #fff;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 1px;
         }
-        
-        /* Cart Sidebar */
-        .cart-overlay {
+        .prod-badge.new { background: var(--gold); }
+        .prod-badge.pod { background: var(--terra); }
+        .prod-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 400;
+            margin-top: 14px;
+            margin-bottom: 2px;
+            letter-spacing: 0.01em;
+        }
+        .prod-meta {
+            font-size: 12px;
+            color: var(--mid);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .prod-price {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        /* ── HOW IT WORKS ── */
+        .how-step {
+            display: flex;
+            gap: 28px;
+            align-items: flex-start;
+            padding: 32px 0;
+            border-top: 1px solid var(--border);
+        }
+        .step-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 52px;
+            font-weight: 300;
+            color: var(--border);
+            line-height: 1;
+            flex-shrink: 0;
+            width: 64px;
+        }
+
+        /* ── CART SIDEBAR ── */
+        .cart-overlay-bg {
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
+            position: fixed;
+            inset: 0;
+            background: rgba(28,28,30,0.4);
+            z-index: 70;
         }
-        .cart-overlay.open {
-            opacity: 1;
-            visibility: visible;
+        .cart-overlay-bg.open { opacity: 1; visibility: visible; }
+        .cart-sidebar {
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+            position: fixed;
+            top: 0; right: 0;
+            height: 100%;
+            width: 100%;
+            max-width: 440px;
+            background: var(--cream);
+            z-index: 80;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
         }
-        .cart-sidebar { 
-            transform: translateX(100%); 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-        .cart-sidebar.open { 
-            transform: translateX(0); 
-        }
-        
-        /* Buttons */
-        .btn-primary {
-            background: #111;
-            color: #fff;
-            transition: all 0.2s ease;
-        }
-        .btn-primary:hover {
-            background: #444;
-        }
-        
-        .btn-secondary {
-            border: 1.5px solid #ccc;
-            color: #111;
-            transition: all 0.2s ease;
-        }
-        .btn-secondary:hover {
-            border-color: #111;
-        }
-        
-        /* Toast notifications */
-        .toast { 
-            transform: translateX(120%); 
-            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
-        }
-        .toast.show { 
-            transform: translateX(0); 
-        }
-        
-        /* Size selector */
-        .size-btn {
-            transition: all 0.2s ease;
-            border: 1.5px solid #e5e5e5;
-        }
-        .size-btn:hover:not(.selected):not(:disabled) {
-            border-color: #111;
-        }
-        .size-btn.selected {
-            border-color: #111;
-            background: #111;
-            color: #fff;
-        }
-        .size-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
-        /* Quantity controls */
-        .qty-btn {
-            transition: all 0.2s ease;
-        }
-        .qty-btn:hover:not(:disabled) {
-            background: #f5f5f5;
-        }
-        .qty-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        
-        /* Cart badge animation */
-        @keyframes cartBounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-        }
-        .cart-badge.animate {
-            animation: cartBounce 0.3s ease;
-        }
-        
-        /* Modal */
+        .cart-sidebar.open { transform: translateX(0); }
+
+        /* ── MODAL ── */
         .modal-overlay {
-            opacity: 0;
-            visibility: hidden;
+            opacity: 0; visibility: hidden;
             transition: all 0.3s ease;
+            position: fixed;
+            inset: 0;
+            background: rgba(28,28,30,0.5);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .modal-overlay.open {
-            opacity: 1;
-            visibility: visible;
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-box {
+            transform: scale(0.96) translateY(16px);
+            transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            background: var(--cream);
+            border-radius: 2px;
+            max-width: 860px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
-        .modal-content {
-            transform: scale(0.95) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .modal-overlay.open .modal-content {
-            transform: scale(1) translateY(0);
-        }
-        
-        /* Auth Modal */
+        .modal-overlay.open .modal-box { transform: scale(1) translateY(0); }
+
+        /* ── AUTH MODAL ── */
         .auth-modal {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+            opacity: 0; visibility: hidden; pointer-events: none;
             transition: all 0.3s ease;
+            position: fixed; inset: 0;
+            background: rgba(28,28,30,0.5);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .auth-modal.open {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: all;
+        .auth-modal.open { opacity: 1; visibility: visible; pointer-events: all; }
+
+        /* ── SIZE BTN ── */
+        .size-btn {
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--charcoal);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.15s;
         }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
+        .size-btn:hover:not(:disabled):not(.selected) { border-color: var(--charcoal); }
+        .size-btn.selected { background: var(--charcoal); color: #fff; border-color: var(--charcoal); }
+        .size-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ── TOAST ── */
+        .toast {
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.68,-0.55,0.265,1.55);
+            position: relative;
         }
-        ::-webkit-scrollbar-track {
-            background: #f5f5f5;
+        .toast.show { transform: translateX(0); }
+
+        /* ── FILTER PILLS ── */
+        .filter-pill {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 2px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--mid);
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
+        .filter-pill:hover { border-color: var(--charcoal); color: var(--charcoal); }
+        .filter-pill.active { background: var(--charcoal); color: #fff; border-color: var(--charcoal); }
+
+        /* ── GLOBAL SECTION ── */
+        .globe-stat {
+            text-align: center;
+            padding: 40px 20px;
+            border-right: 1px solid var(--border);
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #999;
+        .globe-stat:last-child { border-right: none; }
+        .globe-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 58px;
+            font-weight: 300;
+            color: var(--charcoal);
+            line-height: 1;
         }
-        
-        /* Hero text animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+        /* ── QTY CONTROLS ── */
+        .qty-btn {
+            width: 32px; height: 32px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 2px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
         }
-        
-        .animate-fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
+        .qty-btn:hover:not(:disabled) { border-color: var(--charcoal); }
+        .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ── CART BADGE ── */
+        @keyframes cartBounce {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.35); }
         }
-        
-        .animate-delay-1 {
-            animation-delay: 0.2s;
-            opacity: 0;
-        }
-        
-        .animate-delay-2 {
-            animation-delay: 0.4s;
-            opacity: 0;
-        }
+        .cart-badge-anim { animation: cartBounce 0.3s ease; }
     </style>
 </head>
-<body class="antialiased">
+<body>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-20 right-4 z-[60] flex flex-col gap-2 w-80 pointer-events-none"></div>
+<!-- ═══ ANNOUNCEMENT BAR ═══ -->
+<div class="announce-bar" style="position:fixed;top:0;width:100%;z-index:60;">
+    <span class="announce-scroll">
+        FREE WORLDWIDE SHIPPING ON ORDERS OVER $75 &nbsp;·&nbsp;
+        EVERY PIECE MADE JUST FOR YOU &nbsp;·&nbsp;
+        SHIPS TO 180+ COUNTRIES &nbsp;·&nbsp;
+        PRINT ON DEMAND — ZERO WASTE, ZERO STOCK &nbsp;·&nbsp;
+        NEW DESIGNS ADDED WEEKLY
+    </span>
+</div>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 bg-white border-b border-gray-200">
-        <div class="max-w-[1920px] mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <!-- Logo -->
-                <div class="flex items-center gap-12">
-                    <a href="#" class="text-2xl font-black nike-display tracking-tight">CORPORATE SURVIVAL</a>
-                    
-                    <!-- Main Nav -->
-                    <div class="hidden md:flex items-center gap-8 text-sm font-medium">
-                        <a href="#new" class="text-gray-900 hover:text-gray-600 transition-colors">New Drops</a>
-                        <a href="#hoodies" class="text-gray-900 hover:text-gray-600 transition-colors">Hoodies</a>
-                        <a href="#tshirts" class="text-gray-900 hover:text-gray-600 transition-colors">T-Shirts</a>
-                        <a href="#products" class="text-gray-900 hover:text-gray-600 transition-colors">Shop All</a>
-                    </div>
-                </div>
-                
-                <!-- Right Side -->
-                <div class="flex items-center gap-6">
-                    <!-- Search Bar -->
-                    <div class="hidden lg:block">
-                        <div class="relative">
-                            <input type="text" placeholder="Search" 
-                                   class="w-48 px-10 py-2 rounded-full bg-gray-100 text-sm focus:outline-none focus:bg-gray-200 transition-colors">
-                            <svg class="absolute left-3 top-2.5 w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    
-                    <!-- User Account -->
-                    <button onclick="toggleAuthModal()" id="auth-trigger" class="hidden md:block text-gray-900 hover:text-gray-600 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                    </button>
-                    
-                    <span id="user-display" class="hidden text-sm font-medium"></span>
-                    
-                    <!-- Cart Button -->
-                    <button onclick="toggleCart()" class="relative hover:opacity-60 transition-opacity">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                        </svg>
-                        <span id="cart-badge" class="cart-badge absolute -top-1 -right-1 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span>
-                    </button>
-                    
-                    <!-- Mobile menu button -->
-                    <button onclick="toggleMobileMenu()" class="md:hidden">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 mt-4 pt-4">
-                <div class="space-y-4">
-                    <a href="#new" class="block text-gray-900 font-medium">New Drops</a>
-                    <a href="#hoodies" class="block text-gray-900">Hoodies</a>
-                    <a href="#tshirts" class="block text-gray-900">T-Shirts</a>
-                    <a href="#products" class="block text-gray-900">Shop All</a>
-                    <button onclick="toggleAuthModal()" class="block w-full text-left text-gray-900">Sign In</button>
-                </div>
-            </div>
+<!-- ═══ TOAST CONTAINER ═══ -->
+<div id="toast-container" class="fixed top-24 right-4 z-[65] flex flex-col gap-2 w-80 pointer-events-none"></div>
+
+<!-- ═══ NAV ═══ -->
+<nav class="nav" id="main-nav">
+    <div class="max-w-screen-2xl mx-auto px-6 md:px-10 flex items-center justify-between h-16">
+
+        <!-- Left nav -->
+        <div class="hidden md:flex items-center gap-8">
+            <a href="#" class="nav-link" onclick="filterProducts('men')">Men</a>
+            <a href="#" class="nav-link" onclick="filterProducts('women')">Women</a>
+            <a href="#" class="nav-link" onclick="filterProducts('all')">All</a>
         </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="pt-16 relative overflow-hidden bg-gray-50">
-        <div class="relative h-[90vh] max-h-[800px] overflow-hidden">
-            <div class="absolute inset-0 hero-parallax">
-                <img src="https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=1920&h=1080&fit=crop" 
-                     alt="Office workspace" 
-                     class="w-full h-full object-cover"
-                     id="hero-image">
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-            
-            <!-- Hero Content -->
-            <div class="relative h-full flex items-end pb-20">
-                <div class="max-w-7xl mx-auto px-6 w-full">
-                    <div class="max-w-2xl text-white">
-                        <p class="text-sm font-semibold mb-2 animate-fade-in-up tracking-wide">FOR THE MODERN WORKER</p>
-                        <h1 class="text-6xl md:text-7xl font-black nike-display mb-6 leading-none animate-fade-in-up animate-delay-1">
-                            SURVIVE<br/>IN STYLE
-                        </h1>
-                        <p class="text-lg mb-8 text-gray-200 max-w-md animate-fade-in-up animate-delay-2">
-                            Premium apparel for those who laugh through the daily grind. Because if you don't laugh, you'll cry at your desk.
-                        </p>
-                        <a href="#products" class="inline-block btn-primary px-8 py-4 rounded-full font-semibold animate-fade-in-up animate-delay-2 hover:scale-105 transition-transform">
-                            Shop The Collection
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        <!-- Logo -->
+        <a href="#" class="serif text-3xl font-light tracking-widest text-charcoal absolute left-1/2 -translate-x-1/2">LUXA</a>
 
-    <!-- Featured Categories -->
-    <section class="py-12 bg-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="relative h-[500px] group cursor-pointer overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=1000&fit=crop" 
-                         alt="Hoodies" 
-                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
-                    <div class="absolute bottom-12 left-12">
-                        <h3 class="text-white text-4xl font-bold nike-display mb-4">HOODIES</h3>
-                        <p class="text-white/90 mb-4 text-sm">For when the AC is too cold<br/>and your motivation is frozen</p>
-                        <button onclick="filterProducts('hoodie')" class="bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-200 transition-colors">
-                            Shop Hoodies
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="relative h-[500px] group cursor-pointer overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&h=1000&fit=crop" 
-                         alt="T-Shirts" 
-                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors"></div>
-                    <div class="absolute bottom-12 left-12">
-                        <h3 class="text-white text-4xl font-bold nike-display mb-4">T-SHIRTS</h3>
-                        <p class="text-white/90 mb-4 text-sm">Casual Friday approved<br/>(probably)</p>
-                        <button onclick="filterProducts('tshirt')" class="bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-200 transition-colors">
-                            Shop T-Shirts
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Products Section -->
-    <section id="products" class="py-16 bg-white">
-        <div class="max-w-[1920px] mx-auto px-6">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold mb-1">Survival Gear</h2>
-                    <p class="text-gray-600 text-sm">Officially unofficial corporate uniform</p>
-                </div>
-                <div class="flex gap-3">
-                    <button onclick="filterProducts('all')" class="filter-btn px-4 py-2 text-sm rounded-full btn-secondary font-medium" data-filter="all">All</button>
-                    <button onclick="filterProducts('hoodie')" class="filter-btn px-4 py-2 text-sm rounded-full btn-secondary font-medium" data-filter="hoodie">Hoodies</button>
-                    <button onclick="filterProducts('tshirt')" class="filter-btn px-4 py-2 text-sm rounded-full btn-secondary font-medium" data-filter="tshirt">T-Shirts</button>
-                </div>
-            </div>
-            
-            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Products will be rendered here -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="py-20 bg-gray-50">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-                <div>
-                    <div class="text-5xl mb-4">📧</div>
-                    <h3 class="font-bold text-xl mb-3">Free Shipping</h3>
-                    <p class="text-gray-600">Unlike your manager's expectations, our shipping is actually free over $50</p>
-                </div>
-                <div>
-                    <div class="text-5xl mb-4">☕</div>
-                    <h3 class="font-bold text-xl mb-3">Quality Materials</h3>
-                    <p class="text-gray-600">More durable than your last New Year's resolution to quit</p>
-                </div>
-                <div>
-                    <div class="text-5xl mb-4">💼</div>
-                    <h3 class="font-bold text-xl mb-3">Perfect Fit</h3>
-                    <p class="text-gray-600">Unlike that deadline, this actually fits comfortably</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="py-20 bg-white">
-        <div class="max-w-4xl mx-auto px-6 text-center">
-            <h2 class="text-3xl font-bold mb-12">What Corporate Survivors Say</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="p-6 bg-gray-50 rounded-xl">
-                    <p class="text-gray-700 mb-4">"Finally, a shirt that understands my pain. Wore it to the office, got called to HR. Worth it."</p>
-                    <p class="font-semibold">- Sarah, Marketing</p>
-                </div>
-                <div class="p-6 bg-gray-50 rounded-xl">
-                    <p class="text-gray-700 mb-4">"My manager asked where I got it. Now the whole team has matching hoodies. Team building: achieved."</p>
-                    <p class="font-semibold">- Mike, Sales</p>
-                </div>
-                <div class="p-6 bg-gray-50 rounded-xl">
-                    <p class="text-gray-700 mb-4">"Wearing this on Zoom calls is my new passive-aggressive power move."</p>
-                    <p class="font-semibold">- Alex, IT</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-16 bg-black text-white">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-                <div>
-                    <h3 class="font-bold text-lg mb-4 nike-display">CORPORATE SURVIVAL</h3>
-                    <p class="text-gray-400 text-sm">Turning work frustrations into wearable art since 2025.</p>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Shop</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors">New Arrivals</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Hoodies</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">T-Shirts</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Bestsellers</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Help</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors">Order Status</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Shipping & Returns</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Size Guide</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-4">About</h4>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors">Our Story</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Careers (lol jk)</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Press</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-                <p>© 2025 Corporate Survival. All rights reserved. No meetings were held to create this.</p>
-                <div class="flex gap-6">
-                    <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
-                    <a href="#" class="hover:text-white transition-colors">Terms of Use</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- ==================== AUTH MODAL ==================== -->
-    <div id="auth-modal" class="auth-modal fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-8 relative">
-            <button onclick="toggleAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+        <!-- Right nav -->
+        <div class="flex items-center gap-5 ml-auto">
+            <!-- Search icon -->
+            <button class="hidden md:block hover:opacity-60 transition-opacity">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </button>
-            
-            <div class="mb-8">
-                <h2 id="form-title" class="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
-                <p id="form-subtitle" class="text-gray-600">Enter your details to continue</p>
+
+            <!-- Account -->
+            <button onclick="toggleAuthModal()" id="auth-trigger" class="hidden md:block hover:opacity-60 transition-opacity">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </button>
+            <span id="user-display" class="hidden text-sm font-medium text-charcoal"></span>
+
+            <!-- Cart -->
+            <button onclick="toggleCart()" class="relative hover:opacity-60 transition-opacity">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-gold text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center" style="background:var(--gold);">0</span>
+            </button>
+
+            <!-- Mobile menu -->
+            <button onclick="toggleMobileMenu()" class="md:hidden hover:opacity-60">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden border-t px-6 py-4 space-y-4 bg-cream" style="border-color:var(--border);background:var(--cream);">
+        <a href="#" onclick="filterProducts('women');toggleMobileMenu()" class="block nav-link py-1">Women</a>
+        <a href="#" onclick="filterProducts('men');toggleMobileMenu()" class="block nav-link py-1">Men</a>
+        <a href="#" onclick="filterProducts('all');toggleMobileMenu()" class="block nav-link py-1">All</a>
+        <a href="#how-it-works" onclick="toggleMobileMenu()" class="block nav-link py-1">How It Works</a>
+        <button onclick="toggleAuthModal()" class="block nav-link py-1 text-left w-full">Sign In</button>
+    </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero" style="margin-top:34px;">
+    <img id="hero-img" src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1920&h=1200&fit=crop&q=80" alt="LUXA Hero" class="hero-img">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <p class="hero-label">New Season · Global Collection</p>
+        <h1 class="hero-title">Wear the<br/><em>World</em></h1>
+        <p class="hero-sub">Every piece crafted on demand, shipped to your door — wherever in the world that may be.</p>
+        <div class="hero-ctas">
+            <a href="#products" class="btn-gold">Explore Collection</a>
+            <a href="#how-it-works" class="btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.5);">How It Works</a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ POD TRUST STRIP ═══ -->
+<div class="pod-banner">
+    <div class="max-w-screen-xl mx-auto px-8 grid grid-cols-2 md:grid-cols-4 divide-x" style="border-color:var(--border);">
+        <div class="pod-item px-6 md:px-10">
+            <div class="pod-icon">🌍</div>
+            <div>
+                <div class="font-semibold text-sm">Ships Worldwide</div>
+                <div class="text-xs text-gray-500 mt-0.5">180+ countries, free over $75</div>
             </div>
+        </div>
+        <div class="pod-item px-6 md:px-10">
+            <div class="pod-icon">✂️</div>
+            <div>
+                <div class="font-semibold text-sm">Made For You</div>
+                <div class="text-xs text-gray-500 mt-0.5">Printed on demand, never mass-produced</div>
+            </div>
+        </div>
+        <div class="pod-item px-6 md:px-10">
+            <div class="pod-icon">♻️</div>
+            <div>
+                <div class="font-semibold text-sm">Zero Waste</div>
+                <div class="text-xs text-gray-500 mt-0.5">No overstock, no deadstock</div>
+            </div>
+        </div>
+        <div class="pod-item px-6 md:px-10">
+            <div class="pod-icon">🔄</div>
+            <div>
+                <div class="font-semibold text-sm">Easy Returns</div>
+                <div class="text-xs text-gray-500 mt-0.5">30-day hassle-free policy</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Login Form -->
-            <form id="login-form" class="space-y-4" onsubmit="event.preventDefault(); handleLogin();">
-                <div>
-                    <label class="text-sm font-medium text-gray-700 block mb-2">Email</label>
-                    <input type="email" id="login-email" required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-black focus:outline-none transition-colors">
+<!-- ═══ CATEGORY GRID ═══ -->
+<section class="py-20 px-6 md:px-10 max-w-screen-2xl mx-auto">
+    <div class="mb-12">
+        <p class="section-eyebrow">Shop by Category</p>
+        <h2 class="section-title">Dressed for<br/><em>Every Moment</em></h2>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="cat-card col-span-2 h-[520px]" onclick="filterProducts('women')">
+            <img src="https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=800&h=1000&fit=crop&q=80" alt="Women">
+            <div class="cat-overlay"></div>
+            <div class="cat-label">
+                <div class="cat-name">Women</div>
+                <div class="cat-sub">New Arrivals</div>
+            </div>
+        </div>
+        <div class="cat-card h-[520px]" onclick="filterProducts('men')">
+            <img src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=600&h=1000&fit=crop&q=80" alt="Men">
+            <div class="cat-overlay"></div>
+            <div class="cat-label">
+                <div class="cat-name">Men</div>
+                <div class="cat-sub">Essentials</div>
+            </div>
+        </div>
+        <div class="cat-card h-[520px]" onclick="filterProducts('accessories')">
+            <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=1000&fit=crop&q=80" alt="Accessories">
+            <div class="cat-overlay"></div>
+            <div class="cat-label">
+                <div class="cat-name">Extras</div>
+                <div class="cat-sub">Bags & Caps</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ PRODUCTS ═══ -->
+<section id="products" class="py-16 px-6 md:px-10 max-w-screen-2xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div>
+            <p class="section-eyebrow">The Collection</p>
+            <h2 class="section-title">Latest <em>Drops</em></h2>
+        </div>
+        <div class="flex gap-2 flex-wrap" id="filter-btns">
+            <button onclick="filterProducts('all')" class="filter-pill active" data-filter="all">All</button>
+            <button onclick="filterProducts('women')" class="filter-pill" data-filter="women">Women</button>
+            <button onclick="filterProducts('men')" class="filter-pill" data-filter="men">Men</button>
+            <button onclick="filterProducts('accessories')" class="filter-pill" data-filter="accessories">Accessories</button>
+        </div>
+    </div>
+
+    <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-12">
+        <!-- Populated by JS -->
+    </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how-it-works" class="py-24 px-6 md:px-10" style="background:var(--charcoal);">
+    <div class="max-w-screen-xl mx-auto grid md:grid-cols-2 gap-20 items-center">
+        <div>
+            <p class="section-eyebrow" style="color:var(--gold-lt);">Print on Demand</p>
+            <h2 class="section-title" style="color:#fff;">Made When<br/><em>You Order</em></h2>
+            <p class="text-gray-400 mt-6 leading-relaxed max-w-md">We don't hold stock. Every LUXA piece is individually printed and assembled the moment you place your order — reducing waste and ensuring the freshest quality every time.</p>
+
+            <div class="mt-12">
+                <div class="how-step" style="border-color:rgba(255,255,255,0.1);">
+                    <div class="step-num" style="color:rgba(255,255,255,0.15);">01</div>
+                    <div>
+                        <div class="text-white font-semibold mb-1">You Choose</div>
+                        <div class="text-gray-400 text-sm leading-relaxed">Browse hundreds of styles. Pick your design, size, and colour.</div>
+                    </div>
                 </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700 block mb-2">Password</label>
-                    <input type="password" id="login-password" required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-black focus:outline-none transition-colors">
+                <div class="how-step" style="border-color:rgba(255,255,255,0.1);">
+                    <div class="step-num" style="color:rgba(255,255,255,0.15);">02</div>
+                    <div>
+                        <div class="text-white font-semibold mb-1">We Print</div>
+                        <div class="text-gray-400 text-sm leading-relaxed">Your piece is printed using premium DTG or sublimation technology within 2–4 days.</div>
+                    </div>
                 </div>
+                <div class="how-step" style="border-color:rgba(255,255,255,0.1);">
+                    <div class="step-num" style="color:rgba(255,255,255,0.15);">03</div>
+                    <div>
+                        <div class="text-white font-semibold mb-1">World Delivers</div>
+                        <div class="text-gray-400 text-sm leading-relaxed">Shipped from fulfilment centres in the US, EU, and Asia — fast delivery everywhere.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                <div id="login-error" class="hidden text-red-600 text-sm bg-red-50 py-2 px-3 rounded-lg"></div>
+        <div class="grid grid-cols-2 gap-3">
+            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=600&fit=crop&q=80" alt="Printing" class="w-full h-64 object-cover rounded-sm">
+            <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop&q=80" alt="Quality" class="w-full h-64 object-cover rounded-sm mt-12">
+            <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&h=600&fit=crop&q=80" alt="Shipping" class="w-full h-64 object-cover rounded-sm -mt-12">
+            <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop&q=80" alt="Delivered" class="w-full h-64 object-cover rounded-sm">
+        </div>
+    </div>
+</section>
 
-                <button type="submit" id="login-btn" 
-                        class="w-full py-4 btn-primary rounded-full font-semibold text-lg transition-all hover:scale-[1.02]">
-                    Sign In
+<!-- ═══ GLOBAL REACH ═══ -->
+<section class="py-20 px-6" style="background:var(--warm); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="text-center mb-14">
+            <p class="section-eyebrow">Our Reach</p>
+            <h2 class="section-title">Worn <em>Everywhere</em></h2>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 divide-x" style="border-color:var(--border);">
+            <div class="globe-stat">
+                <div class="globe-num">180<span class="text-3xl">+</span></div>
+                <div class="text-sm text-gray-500 mt-2 uppercase tracking-widest">Countries Served</div>
+            </div>
+            <div class="globe-stat">
+                <div class="globe-num">3</div>
+                <div class="text-sm text-gray-500 mt-2 uppercase tracking-widest">Fulfilment Regions</div>
+            </div>
+            <div class="globe-stat">
+                <div class="globe-num">48<span class="text-2xl">hr</span></div>
+                <div class="text-sm text-gray-500 mt-2 uppercase tracking-widest">Avg. Print Time</div>
+            </div>
+            <div class="globe-stat">
+                <div class="globe-num">0</div>
+                <div class="text-sm text-gray-500 mt-2 uppercase tracking-widest">Waste Per Order</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="py-20 px-6 md:px-10" style="background:var(--charcoal); color:#fff;">
+    <div class="max-w-screen-xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-12 mb-16">
+            <div class="md:col-span-2">
+                <div class="serif text-4xl font-light tracking-widest mb-4">LUXA</div>
+                <p class="text-gray-400 text-sm leading-relaxed max-w-xs">Global fashion, made on demand. Every piece made for you, shipped anywhere in the world.</p>
+                <p class="text-gray-600 text-xs mt-4">luxa-clothing.com</p>
+            </div>
+            <div>
+                <h4 class="text-xs uppercase tracking-widest text-gray-400 mb-5">Shop</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="#" onclick="filterProducts('women')" class="hover:text-white transition-colors">Women</a></li>
+                    <li><a href="#" onclick="filterProducts('men')" class="hover:text-white transition-colors">Men</a></li>
+                    <li><a href="#" onclick="filterProducts('accessories')" class="hover:text-white transition-colors">Accessories</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">New Arrivals</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs uppercase tracking-widest text-gray-400 mb-5">Help</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="#how-it-works" class="hover:text-white transition-colors">How It Works</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Shipping Info</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Returns</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Size Guide</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs uppercase tracking-widest text-gray-400 mb-5">About</h4>
+                <ul class="space-y-3 text-sm text-gray-400">
+                    <li><a href="#" class="hover:text-white transition-colors">Our Story</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Sustainability</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t pt-8 flex flex-col md:flex-row justify-between gap-4 text-xs text-gray-600" style="border-color:rgba(255,255,255,0.08);">
+            <p>© 2025 LUXA. All rights reserved. luxa-clothing.com</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-gray-300 transition-colors">Privacy</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">Terms</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">Cookies</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- ═══ CART SIDEBAR ═══ -->
+<div id="cart-overlay-bg" class="cart-overlay-bg" onclick="toggleCart()"></div>
+<div id="cart-sidebar" class="cart-sidebar">
+    <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color:var(--border);">
+        <div>
+            <h2 class="serif text-2xl font-light">Your Bag</h2>
+            <p class="text-xs text-gray-500 mt-0.5">Made on demand — just for you</p>
+        </div>
+        <button onclick="toggleCart()" class="hover:opacity-60 transition-opacity">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div id="cart-items" class="hidden flex-1 overflow-y-auto px-6 py-4 space-y-5"></div>
+    <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
+        <div class="serif text-5xl text-gray-300 mb-4">∅</div>
+        <p class="text-gray-500 mb-1 font-medium">Your bag is empty</p>
+        <p class="text-gray-400 text-sm mb-6">Discover pieces made just for you</p>
+        <button onclick="toggleCart()" class="btn-dark" style="padding:10px 24px;">Browse Collection</button>
+    </div>
+    <div id="cart-footer" class="hidden border-t px-6 py-5 space-y-4" style="border-color:var(--border);">
+        <div class="flex justify-between">
+            <span class="text-sm text-gray-500">Subtotal</span>
+            <span id="cart-subtotal" class="font-semibold text-lg">$0.00</span>
+        </div>
+        <p class="text-xs text-gray-400">Shipping & taxes at checkout · Est. delivery 5–10 days</p>
+        <button onclick="proceedToCheckout()" id="checkout-btn" class="btn-gold w-full text-center" style="padding:16px;">Checkout</button>
+    </div>
+</div>
+
+<!-- ═══ PRODUCT MODAL ═══ -->
+<div id="product-modal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box" id="modal-box">
+        <div id="modal-inner"></div>
+    </div>
+</div>
+
+<!-- ═══ AUTH MODAL ═══ -->
+<div id="auth-modal" class="auth-modal">
+    <div class="bg-white rounded-sm max-w-md w-full mx-4 p-10 relative" style="background:var(--cream);">
+        <button onclick="toggleAuthModal()" class="absolute top-5 right-5 hover:opacity-60 transition-opacity">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="serif text-4xl font-light mb-1" id="auth-title">Sign In</div>
+        <p class="text-sm text-gray-500 mb-8" id="auth-subtitle">Welcome back to LUXA</p>
+
+        <form id="login-form" class="space-y-4" onsubmit="event.preventDefault();handleLogin()">
+            <div>
+                <label class="text-xs uppercase tracking-widest text-gray-500 block mb-2">Email</label>
+                <input type="email" id="login-email" required class="w-full px-4 py-3 border text-sm focus:outline-none transition-colors" style="border-color:var(--border);background:var(--warm);" onfocus="this.style.borderColor='var(--charcoal)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+                <label class="text-xs uppercase tracking-widest text-gray-500 block mb-2">Password</label>
+                <input type="password" id="login-password" required class="w-full px-4 py-3 border text-sm focus:outline-none transition-colors" style="border-color:var(--border);background:var(--warm);" onfocus="this.style.borderColor='var(--charcoal)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div id="login-error" class="hidden text-red-600 text-sm bg-red-50 px-3 py-2 rounded"></div>
+            <button type="submit" id="login-btn" class="btn-dark w-full text-center" style="padding:14px;">Sign In</button>
+            <p class="text-center text-sm text-gray-500">Don't have an account? <button type="button" onclick="toggleAuthMode()" class="underline text-charcoal font-semibold">Sign up</button></p>
+        </form>
+
+        <form id="register-form" class="hidden space-y-4" onsubmit="event.preventDefault();handleRegister()">
+            <div>
+                <label class="text-xs uppercase tracking-widest text-gray-500 block mb-2">Name</label>
+                <input type="text" id="reg-username" required class="w-full px-4 py-3 border text-sm focus:outline-none" style="border-color:var(--border);background:var(--warm);" onfocus="this.style.borderColor='var(--charcoal)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+                <label class="text-xs uppercase tracking-widest text-gray-500 block mb-2">Email</label>
+                <input type="email" id="reg-email" required class="w-full px-4 py-3 border text-sm focus:outline-none" style="border-color:var(--border);background:var(--warm);" onfocus="this.style.borderColor='var(--charcoal)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+                <label class="text-xs uppercase tracking-widest text-gray-500 block mb-2">Password (min 6)</label>
+                <input type="password" id="reg-password" required minlength="6" class="w-full px-4 py-3 border text-sm focus:outline-none" style="border-color:var(--border);background:var(--warm);" onfocus="this.style.borderColor='var(--charcoal)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div>
+                <label class="text-xs uppercase tracking-widest text-gray-500 block mb-2">Confirm Password</label>
+                <input type="password" id="reg-confirm" required class="w-full px-4 py-3 border text-sm focus:outline-none" style="border-color:var(--border);background:var(--warm);" onfocus="this.style.borderColor='var(--charcoal)'" onblur="this.style.borderColor='var(--border)'">
+            </div>
+            <div id="register-error" class="hidden text-red-600 text-sm bg-red-50 px-3 py-2 rounded"></div>
+            <div id="register-success" class="hidden text-green-700 text-sm bg-green-50 px-3 py-2 rounded">Account created! Check your email to confirm.</div>
+            <div class="flex items-start gap-2 text-xs text-gray-500">
+                <input type="checkbox" id="terms-check" required class="mt-0.5">
+                <span>I agree to the <a href="#" class="underline">Terms</a> & <a href="#" class="underline">Privacy Policy</a></span>
+            </div>
+            <button type="submit" id="register-btn" class="btn-dark w-full text-center" style="padding:14px;">Create Account</button>
+            <p class="text-center text-sm text-gray-500">Have an account? <button type="button" onclick="toggleAuthMode()" class="underline text-charcoal font-semibold">Sign in</button></p>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ JAVASCRIPT ═══ -->
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const SUPABASE_URL  = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
+const STRIPE_KEY    = 'pk_test_51SxS9vEvXdzvVm9XvsJ9ucARLlhvs9MfZ6w1ePcNZnZvFNDQoAitDHV9v4Jlwyh3TXmaFMVQ3n5N8YA8GnnlLUWn00p8IMjS9n';
+
+let supabaseClient = null, stripe = null, currentUser = null, isConnected = false;
+
+// ── PRODUCTS ─────────────────────────────────────────────
+const PRODUCTS = [
+    {
+        id:'p001', name:'Heritage Tee', category:'women', gender:'Women',
+        price:34.99, badge:'new',
+        image:'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&h=800&fit=crop&q=80',
+        desc:'A relaxed-fit essential in heavyweight 100% organic cotton. Printed to order in your chosen colour.',
+        sizes:['XS','S','M','L','XL','2XL'], stock:{XS:99,S:99,M:99,L:99,XL:99,'2XL':99}
+    },
+    {
+        id:'p002', name:'Drape Midi Dress', category:'women', gender:'Women',
+        price:64.99, badge:'pod',
+        image:'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=800&fit=crop&q=80',
+        desc:'Effortlessly flowing silhouette in recycled fabric. Each dress is printed individually on-demand.',
+        sizes:['XS','S','M','L','XL'], stock:{XS:99,S:99,M:99,L:99,XL:99}
+    },
+    {
+        id:'p003', name:'Meridian Hoodie', category:'men', gender:'Men',
+        price:69.99, badge:'new',
+        image:'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&h=800&fit=crop&q=80',
+        desc:'Heavyweight fleece with a clean-line front graphic. Made on demand — your size, your colour.',
+        sizes:['S','M','L','XL','2XL'], stock:{S:99,M:99,L:99,XL:99,'2XL':99}
+    },
+    {
+        id:'p004', name:'Canvas Oversized Tee', category:'men', gender:'Men',
+        price:39.99, badge:'pod',
+        image:'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=600&h=800&fit=crop&q=80',
+        desc:'Drop-shoulder street silhouette. Pigment-dyed and printed to order for a lived-in look.',
+        sizes:['S','M','L','XL','2XL'], stock:{S:99,M:99,L:99,XL:99,'2XL':99}
+    },
+    {
+        id:'p005', name:'Woven Bucket Hat', category:'accessories', gender:'Unisex',
+        price:29.99, badge:'new',
+        image:'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=600&h=800&fit=crop&q=80',
+        desc:'100% cotton canvas bucket hat with custom LUXA embroidery. One size, worldwide delivery.',
+        sizes:['One Size'], stock:{'One Size':99}
+    },
+    {
+        id:'p006', name:'Everyday Cargo Pant', category:'women', gender:'Women',
+        price:74.99, badge:'pod',
+        image:'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&h=800&fit=crop&q=80',
+        desc:'Relaxed cargo trousers with multiple pockets. Cut and assembled to your size on demand.',
+        sizes:['XS','S','M','L','XL'], stock:{XS:99,S:99,M:99,L:99,XL:99}
+    },
+    {
+        id:'p007', name:'Structured Varsity Jacket', category:'men', gender:'Men',
+        price:99.99, badge:'pod',
+        image:'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600&h=800&fit=crop&q=80',
+        desc:'A classic reborn. Printed lining, embroidered crest — fully assembled when you place your order.',
+        sizes:['S','M','L','XL','2XL'], stock:{S:99,M:99,L:99,XL:99,'2XL':99}
+    },
+    {
+        id:'p008', name:'Mini Crossbody Bag', category:'accessories', gender:'Unisex',
+        price:44.99, badge:'new',
+        image:'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&h=800&fit=crop&q=80',
+        desc:'Compact canvas crossbody with custom print options. Ships from the fulfilment centre nearest you.',
+        sizes:['One Size'], stock:{'One Size':99}
+    }
+];
+
+// ── CART ─────────────────────────────────────────────────
+let cart = [];
+const LS_CART = 'luxa_cart';
+const LS_USER = 'luxa_user';
+const LS_USERS = 'luxa_users';
+
+function loadCart() {
+    try { cart = JSON.parse(localStorage.getItem(LS_CART)) || []; } catch { cart = []; }
+    renderCartUI();
+}
+function saveCart() {
+    localStorage.setItem(LS_CART, JSON.stringify(cart));
+    renderCartUI();
+}
+
+// ── INIT ──────────────────────────────────────────────────
+window.addEventListener('load', () => {
+    initStripe();
+    loadCart();
+    renderProducts('all');
+    initAuth();
+    initScrollEffects();
+    checkURLParams();
+});
+
+function checkURLParams() {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('success') === 'true') { showToast('Order confirmed! Your piece is being made.','success'); clearCart(); history.replaceState({},document.title,location.pathname); }
+    if (p.get('canceled') === 'true') { showToast('Checkout cancelled — your bag is saved.','info'); history.replaceState({},document.title,location.pathname); }
+}
+
+function initStripe() {
+    try { if (STRIPE_KEY.startsWith('pk_')) stripe = Stripe(STRIPE_KEY); } catch(e) {}
+}
+
+async function initAuth() {
+    const saved = localStorage.getItem(LS_USER);
+    if (saved) { currentUser = JSON.parse(saved); updateUserDisplay(); }
+    try {
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const { data } = await supabaseClient.auth.getSession();
+            if (data?.session?.user) { currentUser = data.session.user; localStorage.setItem(LS_USER, JSON.stringify(currentUser)); updateUserDisplay(); }
+            isConnected = true;
+        }
+    } catch(e) {}
+}
+
+function initScrollEffects() {
+    const nav = document.getElementById('main-nav');
+    const heroImg = document.getElementById('hero-img');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 40);
+        if (heroImg) heroImg.style.transform = `translateY(${window.scrollY * 0.4}px) scale(1.1)`;
+    }, { passive: true });
+}
+
+function updateUserDisplay() {
+    if (!currentUser) return;
+    const name = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'You';
+    document.getElementById('user-display').textContent = name;
+    document.getElementById('user-display').classList.remove('hidden');
+    document.getElementById('auth-trigger').innerHTML = `<button onclick="handleLogout()" class="nav-link">Logout</button>`;
+}
+
+// ── PRODUCT RENDER ────────────────────────────────────────
+function renderProducts(filter) {
+    const grid = document.getElementById('products-grid');
+    const list = filter === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === filter);
+    grid.innerHTML = list.map(p => `
+        <div class="prod-card fade-in" onclick="openModal('${p.id}')">
+            <div class="prod-img-wrap">
+                <img src="${p.image}" alt="${p.name}" loading="lazy">
+                ${p.badge ? `<span class="prod-badge ${p.badge}">${p.badge === 'pod' ? 'Made on Demand' : 'New'}</span>` : ''}
+            </div>
+            <div class="prod-meta mt-3">${p.gender} · ${p.category.charAt(0).toUpperCase()+p.category.slice(1)}</div>
+            <div class="prod-name">${p.name}</div>
+            <div class="prod-price">$${p.price.toFixed(2)}</div>
+        </div>
+    `).join('');
+
+    document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    document.getElementById('products').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function filterProducts(filter) { renderProducts(filter); }
+
+// ── MODAL ────────────────────────────────────────────────
+let selectedSize = null;
+
+function openModal(id) {
+    selectedSize = null;
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('modal-inner').innerHTML = `
+        <div class="relative">
+            <button onclick="closeModal()" class="absolute top-5 right-5 z-10 hover:opacity-60 transition-opacity">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <div class="grid md:grid-cols-2">
+                <div class="aspect-square overflow-hidden" style="background:var(--warm);">
+                    <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover">
+                </div>
+                <div class="p-8 md:p-10 flex flex-col">
+                    <p class="text-xs uppercase tracking-widest mb-2" style="color:var(--mid);">${p.gender} · ${p.category}</p>
+                    <h2 class="serif text-4xl font-light mb-1">${p.name}</h2>
+                    <p class="text-2xl font-semibold mb-6">$${p.price.toFixed(2)}</p>
+                    <p class="text-sm leading-relaxed mb-8" style="color:var(--mid);">${p.desc}</p>
+
+                    <div class="mb-2">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-widest" style="color:var(--mid);">Select Size</span>
+                            <a href="#" class="text-xs underline" style="color:var(--mid);">Size Guide</a>
+                        </div>
+                        <div class="flex flex-wrap gap-2" id="size-btns">
+                            ${p.sizes.map(s => `
+                                <button onclick="selectSize('${s}')" class="size-btn" data-size="${s}">${s}</button>
+                            `).join('')}
+                        </div>
+                        <p id="size-err" class="hidden text-red-500 text-xs mt-2">Please select a size</p>
+                    </div>
+
+                    <div class="mt-auto pt-8 space-y-3">
+                        <button onclick="addFromModal('${p.id}')" class="btn-dark w-full text-center" style="padding:16px;border-radius:2px;">Add to Bag</button>
+                        <p class="text-center text-xs" style="color:var(--mid);">✓ Made on demand · Ships in 5–10 days · Free over $75</p>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    document.getElementById('product-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    document.getElementById('product-modal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function selectSize(s) {
+    selectedSize = s;
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('selected', b.dataset.size === s));
+    document.getElementById('size-err').classList.add('hidden');
+}
+
+function addFromModal(id) {
+    if (!selectedSize) { document.getElementById('size-err').classList.remove('hidden'); return; }
+    addToCart(id, selectedSize);
+    closeModal();
+}
+
+// ── CART LOGIC ────────────────────────────────────────────
+function addToCart(productId, size, qty=1) {
+    const p = PRODUCTS.find(x => x.id === productId);
+    if (!p) return;
+    const idx = cart.findIndex(i => i.productId === productId && i.size === size);
+    if (idx > -1) { cart[idx].quantity += qty; } else { cart.push({ productId, size, quantity: qty, price: p.price }); }
+    saveCart();
+    showToast(`${p.name} added to bag`, 'success');
+    const badge = document.getElementById('cart-badge');
+    badge.classList.add('cart-badge-anim');
+    setTimeout(() => badge.classList.remove('cart-badge-anim'), 300);
+}
+
+function removeFromCart(idx) { cart.splice(idx, 1); saveCart(); }
+
+function updateQty(idx, qty) {
+    if (qty < 1) { removeFromCart(idx); return; }
+    cart[idx].quantity = qty;
+    saveCart();
+}
+
+function clearCart() { cart = []; saveCart(); }
+
+function cartTotal() { return cart.reduce((t,i) => t + i.price * i.quantity, 0); }
+function cartCount() { return cart.reduce((t,i) => t + i.quantity, 0); }
+
+function renderCartUI() {
+    const badge     = document.getElementById('cart-badge');
+    const items     = document.getElementById('cart-items');
+    const empty     = document.getElementById('cart-empty');
+    const footer    = document.getElementById('cart-footer');
+    const subtotal  = document.getElementById('cart-subtotal');
+    const count     = cartCount();
+
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.classList.toggle('hidden', count === 0);
+
+    if (cart.length === 0) {
+        items.classList.add('hidden'); empty.classList.remove('hidden'); footer.classList.add('hidden');
+    } else {
+        items.classList.remove('hidden'); empty.classList.add('hidden'); footer.classList.remove('hidden');
+        items.innerHTML = cart.map((item, i) => {
+            const p = PRODUCTS.find(x => x.id === item.productId);
+            if (!p) return '';
+            return `
+            <div class="flex gap-4 pb-5 border-b" style="border-color:var(--border);">
+                <div class="w-20 h-20 overflow-hidden flex-shrink-0" style="background:var(--warm);">
+                    <img src="${p.image}" class="w-full h-full object-cover" alt="${p.name}">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="serif text-base font-light leading-tight">${p.name}</p>
+                    <p class="text-xs mt-1" style="color:var(--mid);">Size: ${item.size}</p>
+                    <p class="text-sm font-semibold mt-1">$${item.price.toFixed(2)}</p>
+                    <div class="flex items-center gap-3 mt-2">
+                        <button onclick="updateQty(${i},${item.quantity-1})" class="qty-btn" ${item.quantity<=1?'disabled':''}>−</button>
+                        <span class="text-sm w-5 text-center">${item.quantity}</span>
+                        <button onclick="updateQty(${i},${item.quantity+1})" class="qty-btn">+</button>
+                    </div>
+                </div>
+                <button onclick="removeFromCart(${i})" class="text-gray-300 hover:text-gray-600 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
+            </div>`;
+        }).join('');
+        subtotal.textContent = `$${cartTotal().toFixed(2)}`;
+    }
+}
 
-                <p class="text-center text-gray-600 text-sm mt-6">
-                    Don't have an account? 
-                    <button type="button" onclick="toggleAuthMode()" class="text-black font-semibold hover:underline">
-                        Sign up
-                    </button>
-                </p>
-            </form>
-
-            <!-- Register Form -->
-            <form id="register-form" class="hidden space-y-4" onsubmit="event.preventDefault(); handleRegister();">
-                <div>
-                    <label class="text-sm font-medium text-gray-700 block mb-2">Username</label>
-                    <input type="text" id="reg-username" required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-black focus:outline-none transition-colors">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700 block mb-2">Email</label>
-                    <input type="email" id="reg-email" required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-black focus:outline-none transition-colors">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700 block mb-2">Password (min 6 chars)</label>
-                    <input type="password" id="reg-password" required minlength="6"
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-black focus:outline-none transition-colors">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700 block mb-2">Confirm Password</label>
-                    <input type="password" id="reg-confirm" required
-                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-black focus:outline-none transition-colors">
-                </div>
-
-                <div id="register-error" class="hidden text-red-600 text-sm bg-red-50 py-2 px-3 rounded-lg"></div>
-                
-                <div id="register-success" class="hidden text-green-600 text-sm bg-green-50 py-3 px-3 rounded-lg">
-                    <div class="font-bold mb-1">✓ Account Created!</div>
-                    <div>Check your email to confirm your account.</div>
-                </div>
-
-                <button type="submit" id="register-btn" 
-                        class="w-full py-4 btn-primary rounded-full font-semibold text-lg transition-all hover:scale-[1.02]">
-                    Create Account
-                </button>
-
-                <div class="flex items-start gap-2 text-xs text-gray-600">
-                    <input type="checkbox" id="terms-checkbox" required class="mt-0.5">
-                    <span>I agree to the <a href="#" class="underline hover:text-black">Terms</a> and <a href="#" class="underline hover:text-black">Privacy Policy</a></span>
-                </div>
-
-                <p class="text-center text-gray-600 text-sm mt-6">
-                    Already have an account? 
-                    <button type="button" onclick="toggleAuthMode()" class="text-black font-semibold hover:underline">
-                        Sign in
-                    </button>
-                </p>
-            </form>
-        </div>
-    </div>
-
-    <!-- ==================== CART SIDEBAR ==================== -->
-    <div id="cart-overlay" class="cart-overlay fixed inset-0 bg-black/40 z-[70]" onclick="toggleCart()"></div>
-    
-    <div id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-full max-w-md bg-white z-[80] flex flex-col shadow-2xl">
-        <!-- Cart Header -->
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 class="text-xl font-bold">Bag</h2>
-            <button onclick="toggleCart()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        
-        <!-- Cart Items -->
-        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
-            <!-- Cart items will be rendered here -->
-        </div>
-        
-        <!-- Cart Empty State -->
-        <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-            </svg>
-            <p class="text-gray-600 mb-2 font-medium">Your bag is empty</p>
-            <p class="text-gray-500 text-sm mb-4">Unlike your email inbox on Monday morning</p>
-            <button onclick="toggleCart()" class="text-black font-semibold hover:underline">Continue Shopping</button>
-        </div>
-        
-        <!-- Cart Footer -->
-        <div id="cart-footer" class="hidden border-t border-gray-200 p-6 space-y-4">
-            <div class="flex justify-between items-center">
-                <span class="font-medium">Subtotal</span>
-                <span id="cart-subtotal" class="font-bold text-lg">$0.00</span>
-            </div>
-            <div class="text-xs text-gray-600">
-                <p>Shipping and taxes calculated at checkout</p>
-            </div>
-            <button onclick="proceedToCheckout()" id="checkout-btn" class="w-full py-4 btn-primary rounded-full font-semibold text-lg transition-all hover:scale-[1.02]">
-                Checkout
-            </button>
-        </div>
-    </div>
-
-    <!-- ==================== PRODUCT QUICK VIEW MODAL ==================== -->
-    <div id="product-modal" class="modal-overlay fixed inset-0 bg-black/40 z-[90] flex items-center justify-center p-4">
-        <div class="modal-content bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div id="modal-content-inner">
-                <!-- Modal content will be rendered here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== JAVASCRIPT ==================== -->
-    <script>
-        // ==========================================
-        // CONFIGURATION
-        // ==========================================
-        
-        const SUPABASE_URL = 'https://ukewtbhpcsxahkocmhfm.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZXd0YmhwY3N4YWhrb2NtaGZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NzUzMjksImV4cCI6MjA4NTQ1MTMyOX0.Ujnkq7pX-eA6ZLXcf2WwOd4LWrWuD4bcmb0sRJxL2QA';
-        const STRIPE_PUBLISHABLE_KEY = 'pk_test_51SxS9vEvXdzvVm9XvsJ9ucARLlhvs9MfZ6w1ePcNZnZvFNDQoAitDHV9v4Jlwyh3TXmaFMVQ3n5N8YA8GnnlLUWn00p8IMjS9n';
-        
-        let supabaseClient = null;
-        let stripe = null;
-        let isSupabaseConnected = false;
-        let currentUser = null;
-        
-        // ==========================================
-        // PRODUCT DATA - WORK MEME APPAREL
-        // ==========================================
-        
-        const PRODUCTS = [
-            {
-                id: 'prod_001',
-                name: 'Meeting Could\'ve Been An Email',
-                price: 54.99,
-                category: 'hoodie',
-                image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=500&fit=crop',
-                description: 'Premium heavyweight hoodie for surviving unnecessary conference calls. Features "Send Help" pocket lining. 100% organic cotton, unlike your team\'s decision-making process.',
-                sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-                stock: { S: 5, M: 10, L: 8, XL: 3, XXL: 2 }
-            },
-            {
-                id: 'prod_002',
-                name: 'Professional Overthinker',
-                price: 34.99,
-                category: 'tshirt',
-                image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400&h=500&fit=crop',
-                description: 'Soft cotton tee that says what you\'re thinking. Perfect for when your internal monologue needs external validation. Tagless for maximum comfort during your 3am work anxiety.',
-                sizes: ['S', 'M', 'L', 'XL'],
-                stock: { S: 12, M: 15, L: 10, XL: 8 }
-            },
-            {
-                id: 'prod_003',
-                name: 'Ctrl+Alt+Delete Monday',
-                price: 59.99,
-                category: 'hoodie',
-                image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=500&fit=crop',
-                description: 'Oversized comfort hoodie for when you need to reboot your entire week. Comes with hidden pocket for emergency snacks and existential dread. One size fits all levels of burnout.',
-                sizes: ['M', 'L', 'XL', 'XXL'],
-                stock: { M: 6, L: 4, XL: 7, XXL: 5 }
-            },
-            {
-                id: 'prod_004',
-                name: 'Deadline Survivor',
-                price: 37.99,
-                category: 'tshirt',
-                image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop',
-                description: 'Battle-tested tee for warriors who\'ve seen things. Things like unrealistic timelines and scope creep. Breathable fabric for when your manager announces a "quick pivot."',
-                sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-                stock: { S: 8, M: 12, L: 15, XL: 10, XXL: 6 }
-            },
-            {
-                id: 'prod_005',
-                name: 'Coffee Powered',
-                price: 52.99,
-                category: 'hoodie',
-                image: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=400&h=500&fit=crop',
-                description: 'Zippered hoodie for the caffeine-dependent professional. Features motivational lining: "You got this (maybe)." Machine washable, unlike your performance review feedback.',
-                sizes: ['S', 'M', 'L', 'XL'],
-                stock: { S: 4, M: 9, L: 11, XL: 7 }
-            },
-            {
-                id: 'prod_006',
-                name: 'Send Help (and Coffee)',
-                price: 36.99,
-                category: 'tshirt',
-                image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=500&fit=crop',
-                description: 'Emergency signal tee for critical situations. Like when you\'re asked to "circle back" for the 47th time. Relaxed fit for maximum comfort during breakdowns.',
-                sizes: ['S', 'M', 'L', 'XL'],
-                stock: { S: 3, M: 7, L: 5, XL: 4 }
-            },
-            {
-                id: 'prod_007',
-                name: 'Target Achieved* (*Barely)',
-                price: 57.99,
-                category: 'hoodie',
-                image: 'https://images.unsplash.com/photo-1614495039153-e9cd13240469?w=400&h=500&fit=crop',
-                description: 'Celebratory hoodie with asterisk accuracy. Premium fleece for celebrating those technically-met KPIs. Comes with complimentary imposter syndrome.',
-                sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-                stock: { S: 6, M: 8, L: 10, XL: 5, XXL: 3 }
-            },
-            {
-                id: 'prod_008',
-                name: 'Spreadsheet Wizard',
-                price: 35.99,
-                category: 'tshirt',
-                image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=500&fit=crop',
-                description: 'For Excel heroes and VLOOKUP legends. Moisture-wicking for when your pivot table crashes right before the presentation. Comes with secret pride.',
-                sizes: ['S', 'M', 'L', 'XL'],
-                stock: { S: 10, M: 14, L: 12, XL: 9 }
-            }
-        ];
-        
-        // ==========================================
-        // CART STATE
-        // ==========================================
-        
-        let cart = [];
-        
-        function loadCart() {
-            const savedCart = localStorage.getItem('corporate_survival_cart');
-            if (savedCart) {
-                cart = JSON.parse(savedCart);
-            }
-            updateCartUI();
+// ── CHECKOUT ──────────────────────────────────────────────
+async function proceedToCheckout() {
+    if (cart.length === 0) { showToast('Your bag is empty','error'); return; }
+    if (!currentUser) { toggleCart(); toggleAuthModal(); showToast('Sign in to complete your order','info'); return; }
+    const btn = document.getElementById('checkout-btn');
+    btn.disabled = true; btn.textContent = 'Processing…';
+    try {
+        if (!stripe) {
+            await new Promise(r => setTimeout(r, 1400));
+            showToast('Demo: Stripe not configured','info');
+            clearCart(); toggleCart(); return;
         }
-        
-        function saveCart() {
-            localStorage.setItem('corporate_survival_cart', JSON.stringify(cart));
-            updateCartUI();
-        }
-        
-        // ==========================================
-        // INITIALIZATION
-        // ==========================================
-        
-        window.addEventListener('load', async function() {
-            initializeStripe();
-            loadCart();
-            renderProducts();
-            initializeAuth();
-            initHeroParallax();
-            checkUrlParams();
+        const res = await fetch('/api/create-checkout-session', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ items: cart.map(i => ({ productId:i.productId, size:i.size, quantity:i.quantity })), userId: currentUser?.id||'guest' })
         });
-        
-        function checkUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            
-            if (params.get('success') === 'true') {
-                showToast('Order placed successfully! May your next deadline be reasonable.', 'success');
-                clearCart();
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else if (params.get('canceled') === 'true') {
-                showToast('Payment canceled. Your cart is still here, unlike that promotion.', 'info');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
+        const { sessionId } = await res.json();
+        const { error } = await stripe.redirectToCheckout({ sessionId });
+        if (error) throw error;
+    } catch(e) { showToast('Checkout failed. Please try again.','error'); }
+    finally { btn.disabled = false; btn.textContent = 'Checkout'; }
+}
+
+// ── CART TOGGLE ───────────────────────────────────────────
+function toggleCart() {
+    const sb = document.getElementById('cart-sidebar');
+    const ov = document.getElementById('cart-overlay-bg');
+    sb.classList.toggle('open'); ov.classList.toggle('open');
+    document.body.style.overflow = sb.classList.contains('open') ? 'hidden' : '';
+}
+
+// ── AUTH ─────────────────────────────────────────────────
+function toggleAuthModal() {
+    const m = document.getElementById('auth-modal');
+    m.classList.toggle('open');
+    document.body.style.overflow = m.classList.contains('open') ? 'hidden' : '';
+}
+
+function toggleAuthMode() {
+    document.getElementById('login-form').classList.toggle('hidden');
+    document.getElementById('register-form').classList.toggle('hidden');
+    const isReg = document.getElementById('register-form').classList.contains('hidden') === false;
+    document.getElementById('auth-title').textContent = isReg ? 'Create Account' : 'Sign In';
+    document.getElementById('auth-subtitle').textContent = isReg ? 'Join LUXA today' : 'Welcome back to LUXA';
+    ['login-error','register-error','register-success'].forEach(id => document.getElementById(id).classList.add('hidden'));
+}
+
+async function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const pass  = document.getElementById('login-password').value;
+    const btn   = document.getElementById('login-btn');
+    if (!email||!pass) { showAuthError('Please fill in all fields','login-error'); return; }
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    try {
+        let user;
+        if (!isConnected) {
+            const users = JSON.parse(localStorage.getItem(LS_USERS)||'[]');
+            user = users.find(u => u.email===email && u.password===pass);
+            if (!user) throw new Error('Invalid email or password');
+            user = { id:user.id, email:user.email, user_metadata:user.user_metadata };
+        } else {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password:pass });
+            if (error) throw error;
+            user = data.user;
         }
-        
-        async function initializeAuth() {
-            const savedUser = localStorage.getItem('corporate_survival_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                updateUserDisplay();
-            }
-            
-            try {
-                if (typeof supabase !== 'undefined') {
-                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    const { data } = await supabaseClient.auth.getSession();
-                    if (data?.session?.user) {
-                        currentUser = data.session.user;
-                        localStorage.setItem('corporate_survival_user', JSON.stringify(currentUser));
-                        updateUserDisplay();
-                    }
-                    isSupabaseConnected = true;
-                }
-            } catch (err) {
-                console.log('Auth optional, continuing without');
-            }
+        currentUser = user; localStorage.setItem(LS_USER, JSON.stringify(user));
+        toggleAuthModal(); updateUserDisplay(); showToast('Welcome back!','success');
+    } catch(e) { showAuthError(e.message,'login-error'); }
+    finally { btn.disabled=false; btn.textContent='Sign In'; }
+}
+
+async function handleRegister() {
+    const name  = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-password').value;
+    const conf  = document.getElementById('reg-confirm').value;
+    const btn   = document.getElementById('register-btn');
+    if (!name||!email||!pass) { showAuthError('Please fill in all fields','register-error'); return; }
+    if (pass !== conf) { showAuthError('Passwords do not match','register-error'); return; }
+    if (pass.length < 6) { showAuthError('Password must be at least 6 characters','register-error'); return; }
+    btn.disabled=true; btn.textContent='Creating account…';
+    try {
+        if (!isConnected) {
+            const users = JSON.parse(localStorage.getItem(LS_USERS)||'[]');
+            if (users.find(u => u.email===email)) throw new Error('Email already registered');
+            const newUser = { id:'local_'+Date.now(), email, user_metadata:{username:name} };
+            users.push({...newUser, password:pass});
+            localStorage.setItem(LS_USERS, JSON.stringify(users));
+            localStorage.setItem(LS_USER, JSON.stringify(newUser));
+            currentUser = newUser;
+            document.getElementById('register-success').classList.remove('hidden');
+            setTimeout(() => { toggleAuthModal(); updateUserDisplay(); }, 2000);
+        } else {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password:pass, options:{ data:{ username:name } } });
+            if (error) throw error;
+            if (data.session) { currentUser=data.user; localStorage.setItem(LS_USER,JSON.stringify(data.user)); toggleAuthModal(); updateUserDisplay(); showToast('Welcome to LUXA!','success'); }
+            else { document.getElementById('register-success').classList.remove('hidden'); }
         }
-        
-        function initializeStripe() {
-            try {
-                if (STRIPE_PUBLISHABLE_KEY && STRIPE_PUBLISHABLE_KEY.startsWith('pk_')) {
-                    stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
-                }
-            } catch (err) {
-                console.error('Stripe init failed:', err);
-            }
-        }
-        
-        function updateUserDisplay() {
-            if (currentUser) {
-                const username = currentUser.user_metadata?.username || currentUser.email?.split('@')[0] || 'User';
-                document.getElementById('user-display').textContent = `Hi, ${username}`;
-                document.getElementById('user-display').classList.remove('hidden');
-                document.getElementById('auth-trigger').innerHTML = `
-                    <button onclick="handleLogout()" class="text-sm font-medium hover:underline">Logout</button>
-                `;
-            }
-        }
-        
-        // ==========================================
-        // HERO PARALLAX
-        // ==========================================
-        
-        function initHeroParallax() {
-            const heroImage = document.getElementById('hero-image');
-            if (!heroImage) return;
-            
-            window.addEventListener('scroll', () => {
-                const scrolled = window.pageYOffset;
-                const parallax = scrolled * 0.5;
-                heroImage.style.transform = `translateY(${parallax}px) scale(1.1)`;
-            });
-        }
-        
-        // ==========================================
-        // PRODUCT RENDERING
-        // ==========================================
-        
-        function renderProducts(filter = 'all') {
-            const grid = document.getElementById('products-grid');
-            const filteredProducts = filter === 'all' 
-                ? PRODUCTS 
-                : PRODUCTS.filter(p => p.category === filter);
-            
-            grid.innerHTML = filteredProducts.map(product => `
-                <div class="product-card cursor-pointer group" onclick="openQuickView('${product.id}')">
-                    <div class="relative overflow-hidden aspect-square bg-gray-100 mb-3">
-                        <img src="${product.image}" alt="${product.name}" 
-                             class="product-image w-full h-full object-cover" 
-                             loading="lazy">
-                    </div>
-                    <div class="px-1">
-                        <div class="text-xs text-gray-600 mb-1">${product.category.toUpperCase()}</div>
-                        <h3 class="font-semibold text-sm mb-1 group-hover:underline leading-tight">${product.name}</h3>
-                        <p class="font-bold text-sm">$${product.price.toFixed(2)}</p>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.dataset.filter === filter) {
-                    btn.classList.remove('btn-secondary');
-                    btn.classList.add('btn-primary');
-                } else {
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-secondary');
-                }
-            });
-        }
-        
-        function filterProducts(filter) {
-            renderProducts(filter);
-            document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        // ==========================================
-        // QUICK VIEW MODAL
-        // ==========================================
-        
-        function openQuickView(productId) {
-            const product = PRODUCTS.find(p => p.id === productId);
-            if (!product) return;
-            
-            const modal = document.getElementById('product-modal');
-            const content = document.getElementById('modal-content-inner');
-            
-            content.innerHTML = `
-                <div class="relative">
-                    <button onclick="closeQuickView()" class="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                    <div class="grid md:grid-cols-2 gap-8 p-6">
-                        <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden">
-                            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
-                        </div>
-                        <div class="flex flex-col py-4">
-                            <div class="text-xs text-gray-600 mb-2">${product.category.toUpperCase()}</div>
-                            <h2 class="text-3xl font-bold mb-2">${product.name}</h2>
-                            <p class="text-2xl font-bold mb-6">$${product.price.toFixed(2)}</p>
-                            <p class="text-gray-600 mb-8">${product.description}</p>
-                            
-                            <div class="mb-8">
-                                <label class="text-sm font-semibold mb-3 block">Select Size</label>
-                                <div class="grid grid-cols-5 gap-2" id="size-selector">
-                                    ${product.sizes.map(size => `
-                                        <button onclick="selectSize('${size}')" 
-                                                class="size-btn px-4 py-3 rounded-lg text-sm font-semibold ${product.stock[size] === 0 ? 'opacity-30 cursor-not-allowed' : ''}"
-                                                data-size="${size}"
-                                                ${product.stock[size] === 0 ? 'disabled' : ''}>
-                                            ${size}
-                                        </button>
-                                    `).join('')}
-                                </div>
-                                <p id="size-error" class="hidden text-red-600 text-xs mt-2">Please select a size</p>
-                            </div>
-                            
-                            <div class="mt-auto space-y-3">
-                                <button onclick="addToCartFromModal('${product.id}')" 
-                                        class="w-full py-4 btn-primary rounded-full font-semibold transition-all hover:scale-[1.02]">
-                                    Add to Bag
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            modal.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function closeQuickView() {
-            document.getElementById('product-modal').classList.remove('open');
-            document.body.style.overflow = '';
-        }
-        
-        let selectedSize = null;
-        
-        function selectSize(size) {
-            selectedSize = size;
-            document.querySelectorAll('.size-btn').forEach(btn => {
-                btn.classList.toggle('selected', btn.dataset.size === size);
-            });
-            document.getElementById('size-error').classList.add('hidden');
-        }
-        
-        function addToCartFromModal(productId) {
-            if (!selectedSize) {
-                document.getElementById('size-error').classList.remove('hidden');
-                return;
-            }
-            
-            addToCart(productId, selectedSize);
-            selectedSize = null;
-            closeQuickView();
-        }
-        
-        // ==========================================
-        // CART FUNCTIONS
-        // ==========================================
-        
-        function addToCart(productId, size, quantity = 1) {
-            const product = PRODUCTS.find(p => p.id === productId);
-            if (!product) return;
-            
-            const existingIndex = cart.findIndex(item => 
-                item.productId === productId && item.size === size
-            );
-            
-            if (existingIndex > -1) {
-                if (cart[existingIndex].quantity + quantity > product.stock[size]) {
-                    showToast('Stock limit reached (just like your patience)', 'error');
-                    return;
-                }
-                cart[existingIndex].quantity += quantity;
-            } else {
-                cart.push({ productId, size, quantity, price: product.price });
-            }
-            
-            saveCart();
-            showToast(`Added to bag`, 'success');
-            animateCartBadge();
-        }
-        
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            saveCart();
-        }
-        
-        function updateCartQuantity(index, newQuantity) {
-            if (newQuantity < 1) {
-                removeFromCart(index);
-                return;
-            }
-            
-            const item = cart[index];
-            const product = PRODUCTS.find(p => p.id === item.productId);
-            
-            if (newQuantity > product.stock[item.size]) {
-                showToast('Not enough stock', 'error');
-                return;
-            }
-            
-            cart[index].quantity = newQuantity;
-            saveCart();
-        }
-        
-        function clearCart() {
-            cart = [];
-            saveCart();
-        }
-        
-        function getCartTotal() {
-            return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-        }
-        
-        function getCartCount() {
-            return cart.reduce((count, item) => count + item.quantity, 0);
-        }
-        
-        // ==========================================
-        // CART UI
-        // ==========================================
-        
-        function toggleCart() {
-            const sidebar = document.getElementById('cart-sidebar');
-            const overlay = document.getElementById('cart-overlay');
-            
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('open');
-            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
-        }
-        
-        function updateCartUI() {
-            const badge = document.getElementById('cart-badge');
-            const itemsContainer = document.getElementById('cart-items');
-            const emptyState = document.getElementById('cart-empty');
-            const footer = document.getElementById('cart-footer');
-            const subtotal = document.getElementById('cart-subtotal');
-            
-            const count = getCartCount();
-            const total = getCartTotal();
-            
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-            
-            if (cart.length === 0) {
-                itemsContainer.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                footer.classList.add('hidden');
-            } else {
-                itemsContainer.classList.remove('hidden');
-                emptyState.classList.add('hidden');
-                footer.classList.remove('hidden');
-                
-                itemsContainer.innerHTML = cart.map((item, index) => {
-                    const product = PRODUCTS.find(p => p.id === item.productId);
-                    if (!product) return '';
-                    
-                    return `
-                        <div class="flex gap-4 pb-4 border-b border-gray-200">
-                            <div class="w-24 h-24 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h4 class="font-semibold text-sm mb-1 leading-tight">${product.name}</h4>
-                                <p class="text-gray-600 text-xs mb-2">Size: ${item.size}</p>
-                                <p class="font-bold text-sm">$${item.price.toFixed(2)}</p>
-                                
-                                <div class="flex items-center gap-3 mt-3">
-                                    <button onclick="updateCartQuantity(${index}, ${item.quantity - 1})" 
-                                            class="qty-btn w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 text-sm hover:border-gray-900"
-                                            ${item.quantity <= 1 ? 'disabled' : ''}>
-                                        −
-                                    </button>
-                                    <span class="w-8 text-center text-sm font-medium">${item.quantity}</span>
-                                    <button onclick="updateCartQuantity(${index}, ${item.quantity + 1})" 
-                                            class="qty-btn w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 text-sm hover:border-gray-900">
-                                        +
-                                    </button>
-                                </div>
-                            </div>
-                            <button onclick="removeFromCart(${index})" class="text-gray-400 hover:text-gray-600 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    `;
-                }).join('');
-                
-                subtotal.textContent = `$${total.toFixed(2)}`;
-            }
-        }
-        
-        function animateCartBadge() {
-            const badge = document.getElementById('cart-badge');
-            badge.classList.add('animate');
-            setTimeout(() => badge.classList.remove('animate'), 300);
-        }
-        
-        // ==========================================
-        // CHECKOUT
-        // ==========================================
-        
-        async function proceedToCheckout() {
-            if (cart.length === 0) {
-                showToast('Your cart is empty', 'error');
-                return;
-            }
-            
-            if (!currentUser) {
-                toggleCart();
-                toggleAuthModal();
-                showToast('Please sign in to checkout', 'info');
-                return;
-            }
-            
-            const btn = document.getElementById('checkout-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="animate-pulse">Processing...</span>';
-            
-            try {
-                if (!stripe) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    showToast('Demo Mode: Order simulated successfully', 'info');
-                    clearCart();
-                    toggleCart();
-                    return;
-                }
-                
-                const response = await fetch('/api/create-checkout-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: cart.map(item => ({
-                            productId: item.productId,
-                            size: item.size,
-                            quantity: item.quantity
-                        })),
-                        userId: currentUser?.id || 'guest'
-                    })
-                });
-                
-                const { sessionId } = await response.json();
-                const { error } = await stripe.redirectToCheckout({ sessionId });
-                
-                if (error) throw error;
-                
-            } catch (err) {
-                console.error('Checkout error:', err);
-                showToast('Checkout failed. Please try again.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Checkout';
-            }
-        }
-        
-        // ==========================================
-        // AUTH FUNCTIONS
-        // ==========================================
-        
-        function toggleAuthModal() {
-            const modal = document.getElementById('auth-modal');
-            modal.classList.toggle('open');
-            document.body.style.overflow = modal.classList.contains('open') ? 'hidden' : '';
-        }
-        
-        async function handleRegister() {
-            const username = document.getElementById('reg-username').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
-            const confirmPassword = document.getElementById('reg-confirm').value;
-            const btn = document.getElementById('register-btn');
-            
-            document.getElementById('register-error').classList.add('hidden');
-            document.getElementById('register-success').classList.add('hidden');
-            
-            if (!username || !email || !password) {
-                showError('Please fill in all fields', 'register-error');
-                return;
-            }
-            if (password !== confirmPassword) {
-                showError('Passwords do not match', 'register-error');
-                return;
-            }
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters', 'register-error');
-                return;
-            }
-            
-            btn.disabled = true;
-            btn.textContent = 'Creating account...';
-            
-            try {
-                if (!isSupabaseConnected) {
-                    const users = JSON.parse(localStorage.getItem('corporate_survival_users') || '[]');
-                    if (users.find(u => u.email === email)) {
-                        throw new Error('Email already registered');
-                    }
-                    
-                    const newUser = {
-                        id: 'local_' + Date.now(),
-                        email: email,
-                        user_metadata: { username: username }
-                    };
-                    
-                    users.push({ ...newUser, password: password });
-                    localStorage.setItem('corporate_survival_users', JSON.stringify(users));
-                    localStorage.setItem('corporate_survival_user', JSON.stringify(newUser));
-                    currentUser = newUser;
-                    
-                    document.getElementById('register-success').classList.remove('hidden');
-                    setTimeout(() => {
-                        toggleAuthModal();
-                        updateUserDisplay();
-                    }, 2000);
-                    
-                } else {
-                    const { data, error } = await supabaseClient.auth.signUp({
-                        email: email,
-                        password: password,
-                        options: { data: { username: username } }
-                    });
-                    
-                    if (error) throw error;
-                    
-                    if (data.user) {
-                        if (data.session) {
-                            currentUser = data.user;
-                            localStorage.setItem('corporate_survival_user', JSON.stringify(currentUser));
-                            toggleAuthModal();
-                            updateUserDisplay();
-                            showToast('Welcome to the grind!', 'success');
-                        } else {
-                            document.getElementById('register-success').classList.remove('hidden');
-                        }
-                    }
-                }
-            } catch (err) {
-                showError(err.message, 'register-error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Create Account';
-            }
-        }
-        
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const btn = document.getElementById('login-btn');
-            
-            document.getElementById('login-error').classList.add('hidden');
-            
-            if (!email || !password) {
-                showError('Please enter email and password', 'login-error');
-                return;
-            }
-            
-            btn.disabled = true;
-            btn.textContent = 'Signing in...';
-            
-            try {
-                if (!isSupabaseConnected) {
-                    const users = JSON.parse(localStorage.getItem('corporate_survival_users') || '[]');
-                    const user = users.find(u => u.email === email && u.password === password);
-                    
-                    if (!user) throw new Error('Invalid email or password');
-                    
-                    const sessionUser = {
-                        id: user.id,
-                        email: user.email,
-                        user_metadata: user.user_metadata
-                    };
-                    localStorage.setItem('corporate_survival_user', JSON.stringify(sessionUser));
-                    currentUser = sessionUser;
-                    toggleAuthModal();
-                    updateUserDisplay();
-                    showToast('Welcome back, survivor!', 'success');
-                    
-                } else {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({
-                        email: email,
-                        password: password
-                    });
-                    
-                    if (error) throw error;
-                    if (data.user) {
-                        currentUser = data.user;
-                        localStorage.setItem('corporate_survival_user', JSON.stringify(currentUser));
-                        toggleAuthModal();
-                        updateUserDisplay();
-                        showToast('Welcome back, survivor!', 'success');
-                    }
-                }
-            } catch (err) {
-                showError(err.message, 'login-error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Sign In';
-            }
-        }
-        
-        function handleLogout() {
-            if (isSupabaseConnected && supabaseClient) {
-                supabaseClient.auth.signOut();
-            }
-            localStorage.removeItem('corporate_survival_user');
-            currentUser = null;
-            location.reload();
-        }
-        
-        function toggleAuthMode() {
-            const loginForm = document.getElementById('login-form');
-            const registerForm = document.getElementById('register-form');
-            const title = document.getElementById('form-title');
-            const subtitle = document.getElementById('form-subtitle');
-            
-            loginForm.classList.toggle('hidden');
-            registerForm.classList.toggle('hidden');
-            document.getElementById('login-error').classList.add('hidden');
-            document.getElementById('register-error').classList.add('hidden');
-            document.getElementById('register-success').classList.add('hidden');
-            
-            if (loginForm.classList.contains('hidden')) {
-                title.textContent = 'Create Account';
-                subtitle.textContent = 'Join the survivors';
-            } else {
-                title.textContent = 'Sign In';
-                subtitle.textContent = 'Enter your details to continue';
-            }
-        }
-        
-        // ==========================================
-        // UI HELPERS
-        // ==========================================
-        
-        function toggleMobileMenu() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        }
-        
-        function showError(message, elementId) {
-            const el = document.getElementById(elementId);
-            el.textContent = message;
-            el.classList.remove('hidden');
-            setTimeout(() => el.classList.add('hidden'), 5000);
-        }
-        
-        function showToast(message, type) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const colors = {
-                success: 'bg-green-600',
-                error: 'bg-red-600',
-                info: 'bg-blue-600'
-            };
-            
-            toast.className = `toast pointer-events-auto ${colors[type]} text-white p-4 rounded-lg shadow-lg flex items-center gap-3`;
-            toast.innerHTML = `<span class="text-sm font-medium">${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
-        }
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeQuickView();
-                const authModal = document.getElementById('auth-modal');
-                if (authModal.classList.contains('open')) {
-                    toggleAuthModal();
-                }
-                const cartSidebar = document.getElementById('cart-sidebar');
-                if (cartSidebar.classList.contains('open')) {
-                    toggleCart();
-                }
-            }
-        });
-    </script>
+    } catch(e) { showAuthError(e.message,'register-error'); }
+    finally { btn.disabled=false; btn.textContent='Create Account'; }
+}
+
+function handleLogout() {
+    if (isConnected && supabaseClient) supabaseClient.auth.signOut();
+    localStorage.removeItem(LS_USER);
+    currentUser = null; location.reload();
+}
+
+function showAuthError(msg, id) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, type) {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    const bg = { success:'#1C1C1E', error:'#B91C1C', info:'#B8955A' }[type]||'#1C1C1E';
+    t.className = 'toast pointer-events-auto text-white text-sm font-medium px-5 py-3 rounded-sm shadow-xl';
+    t.style.background = bg;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 60);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 500); }, 3200);
+}
+
+// ── MOBILE MENU ───────────────────────────────────────────
+function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+// ── ESCAPE KEY ────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    closeModal();
+    if (document.getElementById('auth-modal').classList.contains('open')) toggleAuthModal();
+    if (document.getElementById('cart-sidebar').classList.contains('open')) toggleCart();
+});
+</script>
 </body>
 </html>
